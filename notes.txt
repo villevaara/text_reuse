@@ -1,0 +1,38 @@
+metadata csv needs:
+author estcid eccoid title publication_year 
+
+* ne kirjat joiden välillä vahvin yhteys, ts
+eniten klustereita
+
+* yhdistä estc metadata
+
+* esiintymät ennen tekstin ekaa varsinaista esiintymistä
+
+* kuinka kokoomateokset pois? theory of moral sentiments student's miscellanyssä
+
+
+
+Gramsey Chevalier
+(Andrew Michael)
+Puffendorf
+Locke John
+Mandeville
+
+
+* hume ei näkynyt spectator -listassa?
+
+* mistä kaikkialta kokoomateoksiin päätynyt tavaraa
+
+* teosjoukot joilla paljon keskinäisriippuvuuksia
+
+
+settien laskeminen:
+1. tee setit / cluskteri:
+    settti(estcid:t) & clusterin_id
+2. summaa identtiset setit
+	setti(estcid:t) + (clucterid:t) + settien määrä
+	* tai tarkista settejä tehdessä onko jo olemassa, ja jos on niin lisää clusterid
+3. tarkista onko pienempi setti jonkun isomman setin subet
+	* jos kyllä niin lisää estcid & määrää
+	* http://stackoverflow.com/questions/2765892/python-see-if-one-set-contains-another-entirely
+

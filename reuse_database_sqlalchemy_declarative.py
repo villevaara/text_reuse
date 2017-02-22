@@ -1,9 +1,6 @@
 # https://techarena51.com/index.php/flask-sqlalchemy-postgresql-tutorial/
 # http://pythoncentral.io/introductory-tutorial-python-sqlalchemy/
 
-# import os
-# import sys
-
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -14,6 +11,7 @@ Base = declarative_base()
 
 class Cluster(Base):
     __tablename__ = 'cluster'
+
     id = Column(Integer, primary_key=True)
     avglength = Column(Integer)
     count = Column(Integer)
@@ -22,6 +20,7 @@ class Cluster(Base):
 
 class Book(Base):
     __tablename__ = 'book'
+
     id = Column(String(250), primary_key=True)  # estc id
     title = Column(String(250))
     author = Column(String(250))
@@ -36,11 +35,9 @@ class Book(Base):
 
 class Extract(Base):
     __tablename__ = 'extract'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
-    # id = Column(String(250), primary_key=True)
+
     id = Column(Integer, primary_key=True)
-    text = Column(String(5000))
+    text = Column(String(50000))
     cluster_id = Column(Integer, ForeignKey('cluster.id'))
     cluster = relationship(Cluster)
     book_id = Column(Integer, ForeignKey('book.id'))
