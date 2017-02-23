@@ -14,6 +14,7 @@ from metadata_functions import (
     get_ecco_dump_dict)
 import json
 import glob
+import time
 
 
 def filter_estc_books(estc_books, ecco_dump_dict):
@@ -31,10 +32,11 @@ def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
         filenames = glob.glob(datadir + "clusters*")
     filenames_length = len(filenames)
 
-    i = 1
+    i_f = 1
     for filename in filenames:
-        print('processing file ' + i + '/' + filenames_length)
-        i = i + 1
+        file_start_time = time.time()
+        print('processing file ' + str(i_f) + '/' + str(filenames_length))
+        i_f = i_f + 1
         with open(filename) as cluster_data_file:
 
             cluster_data = json.load(cluster_data_file)
@@ -57,7 +59,7 @@ def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
                     extract_ecco_id = hit.get('book_id')
                     estc_id = ecco_dump_dict.get(extract_ecco_id)
                     if estc_id in estc_books.keys():
-                        extract_book_id = estc_books.get(estc_id)
+                        extract_book_id = estc_id
                     else:
                         print(estc_id + ' not found in estc metadata')
                         extract_book_id = None
@@ -67,11 +69,13 @@ def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
                                           ecco_id=extract_ecco_id)
                     session.add(new_extract)
                 i = i + 1
-                if i % 100 == 0:
+                if i % 1000 == 0:
                     session.commit()
                     print(str(filename) + ' --- db commit ok cluster_' +
                           str(cluster_id) +
                           ' --- ' + str(i) + '/' + str(cluster_data_len))
+            session.commit()
+        print('took: ' + str(time.time() - file_start_time) + 's')
 
 
 def commit_estc_metadata_to_db(session, estc_books):
@@ -93,9 +97,10 @@ def commit_estc_metadata_to_db(session, estc_books):
                         publisher=value.get('publisher'))
         session.add(new_book)
         i = i + 1
-        if i % 100 == 0:
+        if i % 1000 == 0:
             session.commit()
             print('metadata db commit ok at: ' + str(i) + '/' + str(upto))
+    session.commit()
 
 
 engine = create_engine('sqlite:///sqlalchemy_text_reuse.db')
@@ -122,12 +127,16 @@ session = DBSession()
 # good_metadata_jsonfile = "data/metadata/good_metadata.json"
 # good_metadata = load_good_metadata(good_metadata_jsonfile)
 
+start_time = time.time()
+
 ecco_dump_file = 'data/metadata/dump_ecco12.json'
 ecco_dump_dict = get_ecco_dump_dict(ecco_dump_file)
 estc_books = read_estc_dump('data/metadata/estc_dump.csv')
 estc_books = filter_estc_books(estc_books, ecco_dump_dict)
 
 
-datadir = "data/test/"
+datadir = "data/min1200/"
 commit_estc_metadata_to_db(session, estc_books)
+print('time elapsed: ' + str(time.time() - start_time) + 's')
 commit_datadir_to_db(session, datadir, ecco_dump_dict)
+print('time elapsed: ' + str(time.time() - start_time) + 's')
