@@ -4,10 +4,6 @@ from reuse_database_sqlalchemy_declarative import (Cluster,
                                                    Book,
                                                    Base,
                                                    Extract)
-# from text_reuse_common import (
-#     load_good_metadata,
-#     process_cluster
-# )
 from metadata_functions import (
     read_estc_dump,
     check_metadata_int,
@@ -25,7 +21,6 @@ def filter_estc_books(estc_books, ecco_dump_dict):
 
 
 def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
-    # filenames = glob.glob(datadir + "clusters_0")
     if test:
         filenames = glob.glob(datadir + "clusters_0")
     else:
@@ -75,6 +70,7 @@ def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
                           str(cluster_id) +
                           ' --- ' + str(i) + '/' + str(cluster_data_len))
             session.commit()
+            print(str(filename) + 'final commit done!')
         print('took: ' + str(time.time() - file_start_time) + 's')
 
 
@@ -101,6 +97,7 @@ def commit_estc_metadata_to_db(session, estc_books):
             session.commit()
             print('metadata db commit ok at: ' + str(i) + '/' + str(upto))
     session.commit()
+    print(' --- final metadata db commit ok')
 
 
 engine = create_engine('sqlite:///sqlalchemy_text_reuse.db')
@@ -117,15 +114,6 @@ DBSession = sessionmaker(bind=engine)
 # revert all of them back to the last commit by calling
 # session.rollback()
 session = DBSession()
-
-# Insert a Person in the person table
-# new_cluster = Cluster(id=1001794, avglength=1876)
-# session.add(new_cluster)
-# session.commit()
-
-
-# good_metadata_jsonfile = "data/metadata/good_metadata.json"
-# good_metadata = load_good_metadata(good_metadata_jsonfile)
 
 start_time = time.time()
 
