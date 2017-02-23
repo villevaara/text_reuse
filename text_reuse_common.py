@@ -49,33 +49,51 @@ def write_results_txt(hit_clusters, prefix, good_metadata):
 
 
 def process_cluster(cluster_data, good_metadata,
-                    look_for_text, look_for_field):
+                    look_for_text, look_for_field,
+                    need_others=True,
+                    case_sensitive=False,
+                    min_authors=1,
+                    min_count=2):
 
     hit_clusters = dict()
     totalHits = 0
 
     for key, value in cluster_data.items():
         hits = value.get('Hits')
-        # count = value.get('Count')
+        count = int(value.get('Count'))
         # avglength = value.get('Avglength')
-        # print(count)
-        hitsFound = False
-        othersFound = False
-
-        for hit in hits:
-            eccoid = hit.get('book_id')
-            # print(eccoid)
-            estc_metadata = good_metadata.get(eccoid)
-            searchField = estc_metadata.get(look_for_field)
-            if look_for_text in searchField and searchField is not None:
-                hitsFound = True
-            if (look_for_text not in searchField) and searchField is not None:
+        # print('min_count: ' + str(min_count) + ' count: ' + str(count))
+        if count >= min_count:
+            hitsFound = False
+            if need_others:
+                othersFound = False
+            else: 
                 othersFound = True
+            authorlist = []
 
-        if hitsFound and othersFound:
-            print("hit!")
-            print(key)
-            hit_clusters[key] = value
-            totalHits = totalHits + 1
+            for hit in hits:
+                multi_author = False
+                eccoid = hit.get('book_id')
+                estc_metadata = good_metadata.get(eccoid)
+                if not case_sensitive: 
+                    searchField = estc_metadata.get(look_for_field).lower()
+                    look_for_text = look_for_text.lower()
+                if (look_for_text in searchField) and searchField is not None:
+                    hitsFound = True
+                if (look_for_text not in searchField) and searchField is not None:
+                    othersFound = True
+
+                author = estc_metadata.get('estc_author')
+                authorlist.append(author)
+                authorset = set(authorlist)
+                # print('authors: ' + str(len(authorset)) + ' min_a: ' + min_authors)
+                if len(authorset) >= min_authors:
+                    multi_author = True
+
+            if hitsFound and othersFound and multi_author:
+                print("hit!")
+                print(key)
+                hit_clusters[key] = value
+                totalHits = totalHits + 1
 
     return hit_clusters, totalHits
