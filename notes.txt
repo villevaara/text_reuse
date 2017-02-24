@@ -36,3 +36,27 @@ settien laskeminen:
 	* jos kyllä niin lisää estcid & määrää
 	* http://stackoverflow.com/questions/2765892/python-see-if-one-set-contains-another-entirely
 
+
+--------------
+
+pöhinä
+1, 5, 10, 50
+
+1. hae teos + vuosi
+2. hae clusterit joissa teos nuorin
+3. etsi muiden teosten määrä noissa klustereissä, ehdoin:
+    * tekijä != kuin teoksen
+    * vuosi =max +1, +5, +10, +50
+4. tee taulu jossa teoksen pöhisyys ilmaistu:
+    ESTCID, +1, +5, +10, +50
+    
+    ehkä taulu jossa pöhinäteokset linkitetty.
+    ESTCID, +1pöhinä_ESTCID:t
+    - tää tieto muissa tauluissa jo valmiiks?
+    - tähänkö nyt indeksi vai?
+
+
+-----------------
+subset -taulut:
+
+ESTCID, subsettag

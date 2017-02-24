@@ -11,6 +11,7 @@ from metadata_functions import (
 import json
 import glob
 import time
+import datetime
 
 
 def filter_estc_books(estc_books, ecco_dump_dict):
@@ -99,8 +100,9 @@ def commit_estc_metadata_to_db(session, estc_books):
     session.commit()
     print(' --- final metadata db commit ok')
 
-
-engine = create_engine('sqlite:///sqlalchemy_text_reuse.db')
+# dbstring_sqlite = 'sqlite:///sqlalchemy_text_reuse.db'
+dbstring_postgresql = 'postgresql://text_reuse_user:randompass@localhost:5432/text_reuse'
+engine = create_engine(dbstring_postgresql)
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance
 Base.metadata.bind = engine
@@ -126,5 +128,8 @@ estc_books = filter_estc_books(estc_books, ecco_dump_dict)
 datadir = "data/min1200/"
 commit_estc_metadata_to_db(session, estc_books)
 print('time elapsed: ' + str(time.time() - start_time) + 's')
-commit_datadir_to_db(session, datadir, ecco_dump_dict)
-print('time elapsed: ' + str(time.time() - start_time) + 's')
+commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False)
+
+total_time = int(time.time() - start_time)
+sensible_time = str(datetime.timedelta(seconds=total_time))
+print('time elapsed: ' + sensible_time)

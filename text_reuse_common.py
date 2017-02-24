@@ -67,7 +67,7 @@ def process_cluster(cluster_data, good_metadata,
             hitsFound = False
             if need_others:
                 othersFound = False
-            else: 
+            else:
                 othersFound = True
             authorlist = []
 
@@ -75,18 +75,21 @@ def process_cluster(cluster_data, good_metadata,
                 multi_author = False
                 eccoid = hit.get('book_id')
                 estc_metadata = good_metadata.get(eccoid)
-                if not case_sensitive: 
+                if not case_sensitive:
                     searchField = estc_metadata.get(look_for_field).lower()
                     look_for_text = look_for_text.lower()
-                if (look_for_text in searchField) and searchField is not None:
+                if (look_for_text in searchField) and \
+                   searchField is not None:
                     hitsFound = True
-                if (look_for_text not in searchField) and searchField is not None:
+                if (look_for_text not in searchField) and \
+                   searchField is not None:
                     othersFound = True
 
                 author = estc_metadata.get('estc_author')
                 authorlist.append(author)
                 authorset = set(authorlist)
-                # print('authors: ' + str(len(authorset)) + ' min_a: ' + min_authors)
+                # print('authors: ' + str(len(authorset)) +
+                #       ' min_a: ' + min_authors)
                 if len(authorset) >= min_authors:
                     multi_author = True
 
