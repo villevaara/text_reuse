@@ -104,7 +104,7 @@ def commit_estc_metadata_to_db(session, estc_books):
 dbstring_sqlite = 'sqlite:///sqlalchemy_text_reuse.db'
 dbstring_postgresql = (
     'postgresql://text_reuse_user:randompass@localhost:5432/text_reuse')
-engine = create_engine(dbstring_postgresql)
+engine = create_engine(dbstring_sqlite)
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance
 Base.metadata.bind = engine
