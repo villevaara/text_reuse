@@ -39,18 +39,19 @@ def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
             cluster_data_len = len(cluster_data)
             i = 0
             for key, value in cluster_data.items():
+                hits = value.get('Hits')
                 cluster_id = int(key[8:])
                 cluster_count = int(value.get('Count'))
                 cluster_avglength = int(value.get('Avglength'))
+                cluster_text = hits[0].get('text')
 
                 new_cluster = Cluster(id=cluster_id,
                                       avglength=cluster_avglength,
-                                      count=cluster_count)
+                                      count=cluster_count,
+                                      text=cluster_text)
                 session.add(new_cluster)
 
-                hits = value.get('Hits')
                 for hit in hits:
-                    extract_text = hit.get('text')
                     extract_cluster_id = cluster_id
                     extract_ecco_id = hit.get('book_id')
                     estc_id = ecco_dump_dict.get(extract_ecco_id)
@@ -59,8 +60,7 @@ def commit_datadir_to_db(session, datadir, ecco_dump_dict, test=False):
                     else:
                         print(estc_id + ' not found in estc metadata')
                         extract_book_id = None
-                    new_extract = Extract(text=extract_text,
-                                          cluster_id=extract_cluster_id,
+                    new_extract = Extract(cluster_id=extract_cluster_id,
                                           book_id=extract_book_id,
                                           ecco_id=extract_ecco_id)
                     session.add(new_extract)
@@ -100,8 +100,10 @@ def commit_estc_metadata_to_db(session, estc_books):
     session.commit()
     print(' --- final metadata db commit ok')
 
-# dbstring_sqlite = 'sqlite:///sqlalchemy_text_reuse.db'
-dbstring_postgresql = 'postgresql://text_reuse_user:randompass@localhost:5432/text_reuse'
+
+dbstring_sqlite = 'sqlite:///sqlalchemy_text_reuse.db'
+dbstring_postgresql = (
+    'postgresql://text_reuse_user:randompass@localhost:5432/text_reuse')
 engine = create_engine(dbstring_postgresql)
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance

@@ -15,6 +15,7 @@ class Cluster(Base):
     id = Column(Integer, primary_key=True)
     avglength = Column(Integer)
     count = Column(Integer)
+    text = Column(String(500000))
     # name = Column(String(250), nullable=False)
 
 
@@ -37,7 +38,6 @@ class Extract(Base):
     __tablename__ = 'extract'
 
     id = Column(Integer, primary_key=True)
-    text = Column(String(500000))
     cluster_id = Column(Integer, ForeignKey('cluster.id'))
     cluster = relationship(Cluster)
     book_id = Column(String(250), ForeignKey('book.id'))
@@ -47,7 +47,7 @@ class Extract(Base):
 
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
-# dbstring_sqlite = 'sqlite:///sqlalchemy_text_reuse.db'
+dbstring_sqlite = 'sqlite:///sqlalchemy_text_reuse.db'
 dbstring_postgresql = (
     'postgresql://text_reuse_user:randompass@localhost:5432/text_reuse')
 engine = create_engine(dbstring_postgresql)
