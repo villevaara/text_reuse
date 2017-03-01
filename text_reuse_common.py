@@ -73,7 +73,9 @@ def enrich_cluster(cluster_value, good_metadata):
 
 
 def process_cluster(cluster_data, good_metadata,
-                    search_author, search_title,
+                    search_author='NONE',
+                    search_title='NONE',
+                    search_estcid='NONE',
                     need_others=True,
                     min_authors=1,
                     min_count=2,
@@ -99,6 +101,7 @@ def process_cluster(cluster_data, good_metadata,
             for hit in hits:
                 author_found = False
                 title_found = False
+                estcid_found = False
                 multi_author = False
                 if search_author == "NONE":
                     author_found = True
@@ -110,7 +113,12 @@ def process_cluster(cluster_data, good_metadata,
                 elif search_title.lower() in hit.get('title').lower():
                     title_found = True
 
-                if (author_found and title_found):
+                if search_estcid == "NONE":
+                    estcid_found = True
+                elif search_estcid == hit.get('estcid'):
+                    estcid_found = True
+
+                if (author_found and title_found and estcid_found):
                     hitsFound = True
                 else:
                     othersFound = True

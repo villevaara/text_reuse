@@ -20,17 +20,16 @@ def get_start_params(argv):
     min_authors = 1
     primus = 'any'
     input_dir = 'min100'
-    search_author = 'Mandeville, Bernard'
+    search_author = 'NONE'
     search_title = 'NONE'
+    search_estcid = 'NONE'
 
     try:
         opts, args = getopt.getopt(argv,
                                    "top:d:m:a:i:",
-                                   ["author=", "title="]
+                                   ["author=", "title=", "estcid="]
                                    )
-        # "test", "search_string=", "search_field=", "savedir="
     except getopt.GetoptError:
-        # usage()
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-t':
@@ -39,10 +38,6 @@ def get_start_params(argv):
             need_others = False
         elif opt == '-p':
             primus = arg
-        # elif opt == '-s':
-        #     search_string = arg
-        # elif opt == '-f':
-        #     search_field = arg
         elif opt == '-d':
             savedir = arg
         elif opt == '-m':
@@ -55,14 +50,19 @@ def get_start_params(argv):
             search_author = arg
         elif opt == "--title":
             search_title = arg
+        elif opt == "--estcid":
+            search_estcid = arg
     return(test, search_author, search_title,
-           savedir, need_others, min_count, min_authors, primus, input_dir)
+           savedir, need_others, min_count,
+           min_authors, primus, input_dir, search_estcid)
 
 
 good_metadata_jsonfile = "data/metadata/good_metadata.json"
 good_metadata = load_good_metadata(good_metadata_jsonfile)
+
 (test, search_author, search_title, savedir, need_others,
- min_count, min_authors, primus, input_dir) = get_start_params(sys.argv[1:])
+ min_count, min_authors, primus, input_dir,
+ search_estcid) = get_start_params(sys.argv[1:])
 
 if (test):
     datadir = "data/testgz/"
@@ -85,6 +85,7 @@ for filename in filenames:
                                                   search_author, search_title,
                                                   need_others=need_others,
                                                   min_authors=min_authors,
+                                                  search_estcid=search_estcid,
                                                   min_count=min_count,
                                                   primus=primus)
         write_results_txt(hit_clusters, writedir)
@@ -95,24 +96,9 @@ for filename in filenames:
               str(allHits))
 
 # usage:
-# python text-reuse-cur.py --author "Hume, David" --title "political discourses"  -d min100_hume_notfirst -a 2 -p notfirst -i min100
+# python text-reuse-cur.py --author "Hume, David" --title "political discourses" -d min100_hume_notfirst -a 2 -p notfirst -i min100
+# python text-reuse-cur.py --author "Wallace, Robert" -d min100_wallace_notfirst -a 2 -p notfirst -i min100
+# python text-reuse-cur.py --estcid T144351 --author "Bayle, Pierre" -d min100_bayleT144351_first -a 2 -p first -i min100
 
 # primus (-p) options: first, notfirst, any (default)
 # min authors (-a) options: 1, 2, 3, ...
-
-# process_cluster(cluster_data)
-
-# print(len(hit_clusters))
-# print(hit_clusters.keys())
-
-# TODO
-# 'Locke, John'
-# 'Smith, Adam'
-# 'Grotius, Hugo'
-# 'Temple, William'
-
-# DONE
-# 'Mandeville, Bernard'
-# 'Montesquieu, Charles'
-# 'Hobbes, Thomas'
-# 'Bayle, Pierre'

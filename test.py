@@ -22,4 +22,3 @@ hit_clusters, totalHits = process_cluster(cluster_data, good_metadata,
                                           case_sensitive=False,
                                           min_authors=min_authors,
                                           min_count=min_count)
-
