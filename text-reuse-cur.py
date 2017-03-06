@@ -19,7 +19,7 @@ def get_start_params(argv):
     min_count = 2
     min_authors = 1
     primus = 'any'
-    input_dir = 'min100'
+    # input_dir = 'min100'
     search_author = 'NONE'
     search_title = 'NONE'
     search_estcid = 'NONE'
@@ -53,6 +53,7 @@ def get_start_params(argv):
     return(test, search_author, search_title,
            savedir, need_others, min_count,
            min_authors, primus, search_estcid)
+
 
 print("loading metadata into memory ...")
 
