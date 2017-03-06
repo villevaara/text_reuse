@@ -102,6 +102,7 @@ for filename in filenames:
 # python text-reuse-cur.py --author "Hume, David" --title "political discourses" -d min100_hume_notfirst -a 2 -p notfirst
 # python text-reuse-cur.py --author "Wallace, Robert" -d min100_wallace_notfirst -a 2 -p notfirst
 # python text-reuse-cur.py --estcid T144351 --author "Bayle, Pierre" -d min100_bayleT144351_first -a 2 -p first
+# python text-reuse-cur.py --author "Ferguson, Adam" -d adam_ferguson_first -a 1 -p first -o
 
 # primus (-p) options: first, notfirst, any (default)
 # min authors (-a) options: 1, 2, 3, ...
