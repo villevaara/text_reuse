@@ -54,9 +54,12 @@ def get_start_params(argv):
            savedir, need_others, min_count,
            min_authors, primus, search_estcid)
 
+print("loading metadata into memory ...")
 
 good_metadata_jsonfile = "data/metadata/good_metadata.json"
 good_metadata = load_good_metadata(good_metadata_jsonfile)
+
+print("processing command line params ...")
 
 (test, search_author, search_title, savedir, need_others,
  min_count, min_authors, primus,
@@ -74,6 +77,7 @@ else:
     for subdir in subdirs:
         filenames.extend(glob.glob(subdir + "clusters*"))
 
+print("iterating files ...")
 
 # filenames = glob.glob(datadir + "clusters*")
 filenames_length = len(filenames)
