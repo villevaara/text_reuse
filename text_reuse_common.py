@@ -140,8 +140,7 @@ def process_cluster(cluster_data, good_metadata,
 
             if (hitsFound and othersFound and
                     multi_author and primus_status):
-                print("hit!")
-                print(key)
+                print("hit: " + key)
                 hit_clusters[key] = enriched_value
                 totalHits = totalHits + 1
 
