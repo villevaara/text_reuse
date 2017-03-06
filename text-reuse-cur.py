@@ -3,6 +3,8 @@ import glob
 import sys
 import getopt
 import gzip
+import time
+import datetime
 from text_reuse_common import (
     load_good_metadata,
     write_results_txt,
@@ -55,12 +57,26 @@ def get_start_params(argv):
            min_authors, primus, search_estcid)
 
 
-print("loading metadata into memory ...")
+def get_elapsed_time_str(start_time):
+    elapsed_time = int(time.time() - start_time)
+    sensible_elapsed_time = str(
+        datetime.timedelta(seconds=elapsed_time))
+    return(sensible_elapsed_time)
+
+
+start_time = time.time()
+# sensible_start_time = str(datetime.timedelta(seconds=int(start_time)))
+
+# print("Started at: " + sensible_start_time)
+
+print(get_elapsed_time_str(start_time) +
+      " - Loading metadata into memory ... ")
 
 good_metadata_jsonfile = "data/metadata/good_metadata.json"
 good_metadata = load_good_metadata(good_metadata_jsonfile)
 
-print("processing command line params ...")
+print(get_elapsed_time_str(start_time) +
+      " - Processing command line params ...")
 
 (test, search_author, search_title, savedir, need_others,
  min_count, min_authors, primus,
@@ -78,7 +94,7 @@ else:
     for subdir in subdirs:
         filenames.extend(glob.glob(subdir + "clusters*"))
 
-print("iterating files ...")
+print(get_elapsed_time_str(start_time) + " - Iterating files ...")
 
 # filenames = glob.glob(datadir + "clusters*")
 filenames_length = len(filenames)
@@ -99,8 +115,9 @@ for filename in filenames:
         write_results_txt(hit_clusters, writedir)
         allHits = allHits + totalHits
         i = i + 1
-        print("Processed file (" + str(i) + "/" + str(filenames_length) +
-              "): " + filename + " --- hits so far: " +
+        print(get_elapsed_time_str(start_time) +
+              " - Processed file (" + str(i) + "/" + str(filenames_length) +
+              "): " + filename + " --- total hits: " +
               str(allHits))
 
 # usage:
