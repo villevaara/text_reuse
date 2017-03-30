@@ -60,3 +60,12 @@ pöhinä
 subset -taulut:
 
 ESTCID, subsettag
+
+
+bayle, viittaukset:
+-------------------
+
+ESTCID, Title, Pub_year, Author, number of references, clusterids (list)
+
+Bayle first. ESTCID Baylen. 
+

@@ -8,8 +8,11 @@ import datetime
 from text_reuse_common import (
     load_good_metadata,
     write_results_txt,
-    process_cluster
+    process_cluster,
+    update_summary_dict
 )
+import csv
+import os
 
 
 def get_start_params(argv):
@@ -25,11 +28,14 @@ def get_start_params(argv):
     search_author = 'NONE'
     search_title = 'NONE'
     search_estcid = 'NONE'
+    search_text_file = 'NONE'
+    dirsubset = None
 
     try:
         opts, args = getopt.getopt(argv,
                                    "top:d:m:a:",
-                                   ["author=", "title=", "estcid="]
+                                   ["author=", "title=", "estcid=",
+                                    "textfile=", "dirsubset="]
                                    )
     except getopt.GetoptError:
         sys.exit(2)
@@ -52,9 +58,14 @@ def get_start_params(argv):
             search_title = arg
         elif opt == "--estcid":
             search_estcid = arg
+        elif opt == "--textfile":
+            search_text_file = arg
+        elif opt == "--dirsubset":
+            dirsubset = arg
     return(test, search_author, search_title,
            savedir, need_others, min_count,
-           min_authors, primus, search_estcid)
+           min_authors, primus, search_estcid,
+           search_text_file, dirsubset)
 
 
 def get_elapsed_time_str(start_time):
@@ -80,7 +91,7 @@ print(get_elapsed_time_str(start_time) +
 
 (test, search_author, search_title, savedir, need_others,
  min_count, min_authors, primus,
- search_estcid) = get_start_params(sys.argv[1:])
+ search_estcid, search_text_file, dirsubset) = get_start_params(sys.argv[1:])
 
 if (test):
     datadir = "data/testgz/"
@@ -88,11 +99,23 @@ if (test):
     filenames = glob.glob(datadir + "clusters*")
 else:
     datadir = "data/indexed_clusters/"
-    subdirs = glob.glob(datadir + "min*" + "/")
+    if (dirsubset is not None):
+        subdirs = [(datadir + dirsubset + "/")]
+        print("foo")
+        print(subdirs)
+    else:
+        subdirs = glob.glob(datadir + "min*" + "/")
     writedir = "output/" + savedir + "/" + savedir
     filenames = []
     for subdir in subdirs:
+        print(subdir)
         filenames.extend(glob.glob(subdir + "clusters*"))
+        print(filenames)
+
+if not os.path.exists(writedir):
+    os.makedirs(writedir)
+    print("Created dir: " + writedir)
+
 
 print(get_elapsed_time_str(start_time) + " - Iterating files ...")
 
@@ -101,6 +124,7 @@ filenames_length = len(filenames)
 
 i = 0
 allHits = 0
+summary_dict = {}
 
 for filename in filenames:
     with gzip.open(filename, 'rt') as cluster_data_file:
@@ -111,8 +135,11 @@ for filename in filenames:
                                                   min_authors=min_authors,
                                                   search_estcid=search_estcid,
                                                   min_count=min_count,
-                                                  primus=primus)
+                                                  primus=primus,
+                                                  search_text_file=search_text_file)
         write_results_txt(hit_clusters, writedir)
+        if len(hit_clusters) > 0:
+            summary_dict = dict(update_summary_dict(hit_clusters, summary_dict))
         allHits = allHits + totalHits
         i = i + 1
         print(get_elapsed_time_str(start_time) +
@@ -120,11 +147,28 @@ for filename in filenames:
               "): " + filename + " --- total hits: " +
               str(allHits))
 
+
+with open("summary_dict.csv", 'w') as summary_dict_file:
+    csvwriter = csv.writer(summary_dict_file)
+    csvwriter.writerow(['eccoid',
+                       'title', 'author', 'year', 'references', 'clusters'])
+    for value in summary_dict.values():
+        estcid = value.get("estcid")
+        title = value.get("title")
+        author = value.get("author")
+        year = value.get("year")
+        references = value.get("references")
+        clusters = value.get("clusters")
+        csvwriter.writerow([estcid, title, author, year, references, clusters])
+
 # usage:
 # python text-reuse-cur.py --author "Hume, David" --title "political discourses" -d min100_hume_notfirst -a 2 -p notfirst
 # python text-reuse-cur.py --author "Wallace, Robert" -d min100_wallace_notfirst -a 2 -p notfirst
 # python text-reuse-cur.py --estcid T144351 --author "Bayle, Pierre" -d min100_bayleT144351_first -a 2 -p first
 # python text-reuse-cur.py --author "Ferguson, Adam" -d adam_ferguson_first -a 1 -p first -o
+# python text-reuse-cur.py --estcid T144351 --author "Bayle, Pierre" -d min300_bayleT144351_first -a 2 -p first --dirsubset min300
+# python text-reuse-cur.py --estcid T143096 --author "Bayle, Pierre" -d bayle-first_min300 -a 2 --dirsubset min300 -p first
+
 
 # primus (-p) options: first, notfirst, any (default)
 # min authors (-a) options: 1, 2, 3, ...

@@ -76,10 +76,19 @@ def process_cluster(cluster_data, good_metadata,
                     search_author='NONE',
                     search_title='NONE',
                     search_estcid='NONE',
+                    search_text_file='NONE',
                     need_others=True,
                     min_authors=1,
                     min_count=2,
                     primus='any'):
+
+    search_text_list = []
+
+    if search_text_file != 'NONE':
+        with open(search_text_file) as file:
+            search_text_list = file.readlines()
+
+    print(search_text_list)
 
     hit_clusters = dict()
     totalHits = 0
@@ -102,6 +111,7 @@ def process_cluster(cluster_data, good_metadata,
                 author_found = False
                 title_found = False
                 estcid_found = False
+                text_found = False
                 multi_author = False
                 if search_author == "NONE":
                     author_found = True
@@ -118,7 +128,15 @@ def process_cluster(cluster_data, good_metadata,
                 elif search_estcid == hit.get('estcid'):
                     estcid_found = True
 
-                if (author_found and title_found and estcid_found):
+                if len(search_text_list) == 0:
+                    text_found = True
+                else:
+                    for term in search_text_list:
+                        if term.strip() in hit.get('text').lower():
+                            text_found = True
+
+                if (author_found and title_found and estcid_found and
+                        text_found):
                     hitsFound = True
                 else:
                     othersFound = True
@@ -145,3 +163,68 @@ def process_cluster(cluster_data, good_metadata,
                 totalHits = totalHits + 1
 
     return hit_clusters, totalHits
+
+
+def write_single_cluster_txt(cluster_data_dict, write_filename):
+    cluster_index = cluster_data_dict.get('cluster_index')
+    gz_filename = cluster_data_dict.get('gz_filename')
+    cluster_data = cluster_data_dict.get('cluster_data')
+
+    filename = write_filename
+    with open(filename, 'w') as txtfile:
+        txtfile.write("gz_filename: " + gz_filename + "\n")
+        txtfile.write("clust:       " + cluster_index + "\n")
+        txtfile.write("count:       " + str(cluster_data.get('Count')) + "\n")
+        txtfile.write("avgle:       " +
+                      str(cluster_data.get('Avglength')) + "\n\n")
+        hits = cluster_data.get('Hits')
+
+        for hit in hits:
+            eccoid = hit.get('book_id')
+            year = hit.get('year')
+            author = hit.get('author')
+            title = hit.get('title')
+            text = hit.get('text')
+            txtfile.write(str(year) + " -- " + author + " -- " + title +
+                          " -- eccoid: " + str(eccoid) +
+                          "\n\n")
+            txtfile.write(text)
+            txtfile.write("\n\n-----\n")
+
+
+def update_summary_dict(hit_clusters, summary_dict):
+    for key, value in hit_clusters.items():
+
+        cluster_index = key
+        cluster_data = value
+
+        hits = cluster_data.get('Hits')
+
+        for hit in hits:
+            estcid = hit.get('estcid')
+            year = hit.get('year')
+            author = hit.get('author')
+            title = hit.get('title')
+
+            if estcid in summary_dict.keys():
+                # print(summary_dict)
+                summary_dict_datarow = summary_dict.get(estcid)
+                # print(summary_dict_datarow)
+                references = summary_dict_datarow.get("references") + 1
+                summary_dict_datarow["references"] = references
+                clusters = summary_dict_datarow.get("clusters")
+                clusters.append(cluster_index)
+                summary_dict_datarow["clusters"] = clusters
+                summary_dict[estcid] = summary_dict_datarow
+            else:
+                clusters = [cluster_index]
+                references = 1
+                summary_dict_datarow = {"estcid": estcid,
+                                        "title": title,
+                                        "author": author,
+                                        "year": year,
+                                        "references": references,
+                                        "clusters": clusters}
+                summary_dict[estcid] = summary_dict_datarow
+
+    return summary_dict
