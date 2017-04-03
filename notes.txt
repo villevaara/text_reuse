@@ -69,3 +69,7 @@ ESTCID, Title, Pub_year, Author, number of references, clusterids (list)
 
 Bayle first. ESTCID Baylen. 
 
+dictionary 1734:
+T143096
+
+Samuel Johnson. Merkittävä kriitikko, mihin tarttui Baylessä. Muut krritikot -> debatoiduimmat kohdat.

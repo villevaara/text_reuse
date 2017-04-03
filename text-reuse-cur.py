@@ -102,15 +102,15 @@ else:
     if (dirsubset is not None):
         subdirs = [(datadir + dirsubset + "/")]
         print("foo")
-        print(subdirs)
+        # print(subdirs)
     else:
         subdirs = glob.glob(datadir + "min*" + "/")
     writedir = "output/" + savedir + "/" + savedir
     filenames = []
     for subdir in subdirs:
-        print(subdir)
+        # print(subdir)
         filenames.extend(glob.glob(subdir + "clusters*"))
-        print(filenames)
+        # print(filenames)
 
 if not os.path.exists(writedir):
     os.makedirs(writedir)
@@ -147,10 +147,10 @@ for filename in filenames:
               "): " + filename + " --- total hits: " +
               str(allHits))
 
-
-with open("summary_dict.csv", 'w') as summary_dict_file:
+summary_dict_fname = "summary_dict_" + savedir + ".csv"
+with open(summary_dict_fname, 'w') as summary_dict_file:
     csvwriter = csv.writer(summary_dict_file)
-    csvwriter.writerow(['eccoid',
+    csvwriter.writerow(['estcid',
                        'title', 'author', 'year', 'references', 'clusters'])
     for value in summary_dict.values():
         estcid = value.get("estcid")
