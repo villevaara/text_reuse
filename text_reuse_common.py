@@ -10,7 +10,8 @@ def load_good_metadata(jsonfile):
 
 def write_results_txt(hit_clusters, prefix):
     for key, value in hit_clusters.items():
-        filename = prefix + "_" + key + ".txt"
+        directory = "output/" + prefix + "/"
+        filename = directory + prefix + "_" + key + ".txt"
         with open(filename, 'w') as txtfile:
             txtfile.write("clust: " + key + "\n")
             txtfile.write("count: " + str(value.get('Count')) + "\n")
@@ -88,7 +89,7 @@ def process_cluster(cluster_data, good_metadata,
         with open(search_text_file) as file:
             search_text_list = file.readlines()
 
-    print(search_text_list)
+    # print(search_text_list)
 
     hit_clusters = dict()
     totalHits = 0

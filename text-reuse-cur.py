@@ -105,7 +105,7 @@ else:
         # print(subdirs)
     else:
         subdirs = glob.glob(datadir + "min*" + "/")
-    writedir = "output/" + savedir + "/" + savedir
+    writedir = "output/" + savedir + "/"  # + savedir
     filenames = []
     for subdir in subdirs:
         # print(subdir)
@@ -137,7 +137,7 @@ for filename in filenames:
                                                   min_count=min_count,
                                                   primus=primus,
                                                   search_text_file=search_text_file)
-        write_results_txt(hit_clusters, writedir)
+        write_results_txt(hit_clusters, savedir)
         if len(hit_clusters) > 0:
             summary_dict = dict(update_summary_dict(hit_clusters, summary_dict))
         allHits = allHits + totalHits
@@ -147,7 +147,15 @@ for filename in filenames:
               "): " + filename + " --- total hits: " +
               str(allHits))
 
-summary_dict_fname = "summary_dict_" + savedir + ".csv"
+summarydir = "output/" + savedir + "/summary/"
+
+if not os.path.exists(summarydir):
+    os.makedirs(summarydir)
+    print("Created dir: " + summarydir)
+
+summary_dict_fname = (summarydir +
+                      "summary_dict_" + savedir + ".csv")
+
 with open(summary_dict_fname, 'w') as summary_dict_file:
     csvwriter = csv.writer(summary_dict_file)
     csvwriter.writerow(['estcid',
