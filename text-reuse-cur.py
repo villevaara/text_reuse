@@ -101,16 +101,12 @@ else:
     datadir = "data/indexed_clusters/"
     if (dirsubset is not None):
         subdirs = [(datadir + dirsubset + "/")]
-        print("foo")
-        # print(subdirs)
     else:
         subdirs = glob.glob(datadir + "min*" + "/")
     writedir = "output/" + savedir + "/"  # + savedir
     filenames = []
     for subdir in subdirs:
-        # print(subdir)
         filenames.extend(glob.glob(subdir + "clusters*"))
-        # print(filenames)
 
 if not os.path.exists(writedir):
     os.makedirs(writedir)
