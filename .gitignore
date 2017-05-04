@@ -5,3 +5,7 @@ venv/
 __pycache__/
 meta_clusters.*
 *.db
+.~*
+plans/
+gephi/
+*.csv

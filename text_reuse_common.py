@@ -43,6 +43,38 @@ def write_results_txt(hit_clusters, prefix):
                 txtfile.write("\n\n-----\n")
 
 
+def get_author_from_estc(book_ecco_id, good_metadata):
+    eccoid = book_ecco_id
+    estc_metadata = good_metadata.get(eccoid)
+    # year = estc_metadata.get('estc_publication_year')
+    # if year == 'NA' or year == 'ESTC DATA MISSING':
+    #     year = 9999
+    # else:
+    #     year = int(year)
+    author = estc_metadata.get('estc_author')
+    if not author:
+        author = "NO AUTHOR IN ESTC DATA"
+    # hit_dict = {'eccoid': eccoid,
+    #             'year': year,
+    #             'author': author,
+    #             'title': estc_metadata.get('estc_title'),
+    #             'estcid': estc_metadata.get('estc_id'),
+    #             'text': hit.get('text')}
+    # hits_sorted.append(hit_dict)
+    return author
+
+
+def get_year_from_estc(book_ecco_id, good_metadata):
+    eccoid = book_ecco_id
+    estc_metadata = good_metadata.get(eccoid)
+    year = estc_metadata.get('estc_publication_year')
+    if year == 'NA' or year == 'ESTC DATA MISSING':
+        year = 9999
+    else:
+        year = int(year)
+    return year
+
+
 def enrich_cluster(cluster_value, good_metadata):
     hits = cluster_value.get('Hits')
     hits_sorted = []
