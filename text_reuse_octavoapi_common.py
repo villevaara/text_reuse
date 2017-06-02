@@ -5,41 +5,7 @@ from text_reuse_common import (
     get_author_from_estc,
     get_year_from_estc,
     get_estcid_from_estc)
-# import plotly.plotly as py
-# import plotly.graph_objs as go
-# import plotly.offline as po
 import re
-
-
-def get_nodes(data_docs, good_metadata):
-    nodes = {}
-    for doc in data_docs:
-        document_id = str(doc.get('documentID'))
-        if document_id not in nodes.keys():
-            title = doc.get('title')
-            cluster_id = doc.get('clusterID')
-            author = get_author_from_estc(document_id, good_metadata)
-            year = get_year_from_estc(document_id, good_metadata)
-            nodes[document_id] = {'document_id': document_id,
-                                  'title': title,
-                                  'cluster_id': cluster_id,
-                                  'author': author,
-                                  'year': year}
-    return nodes
-
-
-def write_nodes_csv(nodes, csv_prefix):
-    output_csvfile = "nodes_" + csv_prefix + ".csv"
-    with open(output_csvfile, 'w') as nodes_file:
-        csvwriter = csv.writer(nodes_file)
-        csvwriter.writerow(['Id', 'Cluster', 'Title', 'Author', 'Year'])
-        for row in nodes.values():
-            csvwriter.writerow([row.get('document_id'),
-                                row.get('cluster_id'),
-                                row.get('title'),
-                                row.get('author'),
-                                row.get('year')
-                                ])
 
 
 def get_clusters(data_docs):
@@ -54,48 +20,6 @@ def get_clusters(data_docs):
     return clusters
 
 
-def get_edges(clusters):
-    edges = []
-    for key, value in clusters.items():
-        cluster_id = "cid_" + str(key)
-        last_doc = len(value) - 1
-        for i in range(0, last_doc):
-            doc_id = value[i]
-            other_ids = value[i + 1:len(value)]
-            for other_id in other_ids:
-                cluster_dict = {'source': doc_id,
-                                'target': other_id,
-                                'cluster': cluster_id}
-                edges.append(cluster_dict)
-
-    print("Edges: " + str(len(edges)))
-    return edges
-
-
-def write_edges_csv(edges):
-    output_csvfile = "edges.csv"
-    with open(output_csvfile, 'w') as nodes_file:
-        csvwriter = csv.writer(nodes_file)
-        csvwriter.writerow(['Source', 'Target', 'Weight', 'Type'])
-        for edge in edges:
-            csvwriter.writerow([edge.get('source'),
-                                edge.get('target'),
-                                edge.get('count'),
-                                'Undirected'])
-
-
-def write_edges_with_clusterids_csv(edges, csv_prefix):
-    output_csvfile = "edges_" + csv_prefix + ".csv"
-    with open(output_csvfile, 'w') as nodes_file:
-        csvwriter = csv.writer(nodes_file)
-        csvwriter.writerow(['Source', 'Target', 'Type', 'Cluster'])
-        for edge in edges:
-            csvwriter.writerow([edge.get('source'),
-                                edge.get('target'),
-                                'Undirected',
-                                edge.get('cluster')])
-
-
 def get_document_length_from_api(document_id):
     api_request = ("https://vm0542.kaj.pouta.csc.fi/ecco_octavo_api/search" +
                    "?query=<DOCUMENT§documentID:" +
@@ -107,27 +31,37 @@ def get_document_length_from_api(document_id):
     return document_length
 
 
-def get_cluster_data_for_document_id_from_api(document_id):
+def get_cluster_data_for_document_id_from_api(document_id, testing=False):
+    if testing:
+        limit_timeout = "&limit=10&timeout=30"
+    else:
+        limit_timeout = "&limit=-1&timeout=-1"
+
     api_request = (
         "https://vm0542.kaj.pouta.csc.fi/eccocluster_octavo_api/search" +
         "?query=documentID:" +
         str(document_id) +
         "&field=documentID&field=title&field=clusterID&field=startIndex" +
         "&field=endIndex&field=avgLength&field=text" +
-        "&limit=-1&timeout=-1")
+        limit_timeout)
     response = get(api_request)
     data = response.json().get('results').get('docs')
     return data
 
 
-def get_wide_cluster_data_for_document_id_from_api(document_id):
+def get_wide_cluster_data_for_document_id_from_api(document_id, testing=False):
+    if testing:
+        limit_timeout = "&limit=100&timeout=120"
+    else:
+        limit_timeout = "&limit=-1&timeout=-1"
+
     api_request = (
         "https://vm0542.kaj.pouta.csc.fi/eccocluster_octavo_api/search" +
         "?query=<CLUSTER§<CLUSTER§documentID:" +
         str(document_id) +
         "§clusterID>§CLUSTER>" +
         "&field=documentID&field=title&field=clusterID&field=startIndex" +
-        "&field=endIndex&field=text&limit=-1&timeout=-1")
+        "&field=endIndex&field=text" + limit_timeout)
     response = get(api_request)
     data = response.json().get('results').get('docs')
     return data
@@ -196,7 +130,6 @@ def get_start_and_end_indices_for_cluster_and_document(enriched_cluster_data,
     book_id = str(book_id)
 
     for item in enriched_cluster_data:
-        # print(type(item.get('document_id')))
         if (item.get('document_id') == book_id):
             # print("hit")
             start_i = item.get('startIndex')
@@ -214,9 +147,10 @@ def get_cluster_data_for_document_id_from_api_filters(document_id,
                                                       not_author=True,
                                                       originals_only=True,
                                                       years_min=-1000,
-                                                      years_max=1000):
+                                                      years_max=1000,
+                                                      testing=False):
 
-    data = get_wide_cluster_data_for_document_id_from_api(document_id)
+    data = get_wide_cluster_data_for_document_id_from_api(document_id, testing)
     print("Orig data length:" + str(len(data)))
 
     document_id = str(document_id)
@@ -244,11 +178,13 @@ def get_cluster_data_for_document_id_from_api_filters(document_id,
             if (item.get('cluster_id') not in interesting_clusters):
                 continue
 
-        if not (year <= (orig_year + years_max)):
-            continue
+        if years_max != 1000:
+            if not (year <= (orig_year + years_max)):
+                continue
 
-        if not (year >= (orig_year + years_min)):
-            continue
+        if years_min != -1000:
+            if not (year >= (orig_year + years_min)):
+                continue
 
         returndata.append(item)
 
@@ -266,33 +202,37 @@ def write_coverage_as_csv(coverage_data):
             csvwriter.writerow([row])
 
 
-def get_text_for_document_id_from_api(document_id):
+def get_text_for_document_id_from_api(document_id, testing=False):
+    if testing:
+        limit_timeout = "&limit=10&timeout=30"
+    else:
+        limit_timeout = "&limit=-1&timeout=-1"
+
     api_request = ("https://vm0542.kaj.pouta.csc.fi/ecco_octavo_api/search" +
                    "?query=<DOCUMENT§documentID:" +
                    str(document_id) +
-                   "§DOCUMENT>&limit=-1&timeout=-1&field=content")
+                   "§DOCUMENT>&field=content&field=collectionID" +
+                   limit_timeout)
     response = get(api_request)
     text = response.json().get('results').get('docs')[0].get('content')
-    return text
+    collection = (
+        response.json().get('results').get('docs')[0].get('collectionID'))
+    retdict = {'text': text, 'collection': collection}
+    return retdict
 
 
 def get_headers_from_document_text(document_text):
     header_index_and_text = []
-
     header_indices = []
-
     # !!!obs does this work?
     for match in re.finditer('\n\n#', document_text):
         header_indices.append(match.start())
-
     for index in header_indices:
-        from_header = document_text[index:]
+        from_header = document_text[index + 3:]
         newline_position = from_header.find('\n')
-        header_text = (from_header[3:newline_position]).strip()
+        header_text = (from_header[0:newline_position]).strip()
         # leave the \n\n# plus whitespace from the header text
-
         header_index_and_text.append([index, header_text])
-
     return header_index_and_text
 
 

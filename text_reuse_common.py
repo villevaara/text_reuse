@@ -43,14 +43,8 @@ def write_results_txt(hit_clusters, prefix):
                 txtfile.write("\n\n-----\n")
 
 
-def get_author_from_estc(book_ecco_id, good_metadata):
-    eccoid = book_ecco_id
-    estc_metadata = good_metadata.get(eccoid)
-    # year = estc_metadata.get('estc_publication_year')
-    # if year == 'NA' or year == 'ESTC DATA MISSING':
-    #     year = 9999
-    # else:
-    #     year = int(year)
+def get_author_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
     author = estc_metadata.get('estc_author')
     if not author:
         author = "NO AUTHOR IN ESTC DATA"
@@ -64,24 +58,38 @@ def get_author_from_estc(book_ecco_id, good_metadata):
     return author
 
 
-def get_estcid_from_estc(book_ecco_id, good_metadata):
-    eccoid = book_ecco_id
-    estc_metadata = good_metadata.get(eccoid)
+def get_estcid_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
     estcid = estc_metadata.get('estc_id')
     if not estcid:
-        estcid = "NO ESTCID IN ESTC DATA"
+        estcid = "NO DATA FOR FIELD IN ESTC"
     return estcid
 
 
-def get_year_from_estc(book_ecco_id, good_metadata):
-    eccoid = book_ecco_id
-    estc_metadata = good_metadata.get(eccoid)
+def get_location_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
+    location = estc_metadata.get('estc_publication_place')
+    if not location:
+        location = "NO DATA FOR FIELD IN ESTC"
+    return location
+
+
+def get_year_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
     year = estc_metadata.get('estc_publication_year')
     if year == 'NA' or year == 'ESTC DATA MISSING':
         year = 9999
     else:
         year = int(year)
     return year
+
+
+def get_title_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
+    title = estc_metadata.get('estc_title')
+    if not title:
+        title = "NO DATA FOR FIELD IN ESTC"
+    return title
 
 
 def enrich_cluster(cluster_value, good_metadata):
