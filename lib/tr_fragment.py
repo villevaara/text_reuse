@@ -34,6 +34,7 @@ class TextReuseFragment(object):
         self.find_end_index = -1
         self.document_length = None
         self.preceding_header = None
+        self.fragment_indices = "original"
 
     def add_metadata(self, good_metadata):
         self.location = get_location_from_estc(
@@ -69,12 +70,14 @@ class TextReuseFragment(object):
         fragment_start_index = document_text_stripped.find(self.text)
 
         if fragment_start_index == -1:
-            print("Fragment text not found in fulltext!")
-            return
-
-        self.find_start_index = fragment_start_index
-        self.find_end_index = (fragment_start_index +
-                               len(self.text))
+            print("Fragment text not found in fulltext! Using original data.")
+            self.find_start_index = self.start_index
+            self.find_end_index = self.end_index
+        else:
+            self.find_start_index = fragment_start_index
+            self.find_end_index = (fragment_start_index +
+                                   len(self.text))
+            self.fragment_indices = "searched"
 
         context_before_start_index = self.find_start_index - window_size
         if context_before_start_index < 0:

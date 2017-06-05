@@ -49,10 +49,11 @@ good_metadata = load_good_metadata(good_metadata_jsonfile)
 
 
 # get doc from api
-document_id = "0429000102"  # hume history, tudor vol2 (elizabeth)
-# document_text = get_text_for_document_id_from_api(document_id)
+# document_id = "0429000102"  # hume history, tudor vol2 (elizabeth)
+document_id = "1611003000"  # madeville fable 1714
+
 cluster_data = get_wide_cluster_data_for_document_id_from_api(
-    document_id, testing=True)
+    document_id, testing=False)
 fragment_list = get_fragmentlist(cluster_data)
 
 cluster_ids = set()
@@ -65,6 +66,30 @@ for cluster_id in cluster_ids:
     cluster = TextReuseCluster(cluster_id, fragments)
     clusters.append(cluster)
 
+
 # original_document_fragments = (
 #     get_fragments_of_document_id(fragment_list, document_id))
+
+outfilepath = "output/new_clusters/fable/fable_first_others/"
+
+# drop all clusters not starting with fable 1714
+for cluster in clusters:
+    # first not fable:
+    if cluster.fragment_list[0].ecco_id != document_id:
+        continue
+    # no others than mandeville in
+    if cluster.get_number_of_authors() < 2:
+        continue
+    cluster.write_cluster_csv(outfilepath)
+
+outfilepath2 = "output/new_clusters/fable/fable_not_first/"
+# drop all clusters starting with fable
+for cluster in clusters:
+    # first fable:
+    if cluster.fragment_list[0].ecco_id == document_id:
+        continue
+    # no others than mandeville in
+    if cluster.get_number_of_authors() < 2:
+        continue
+    cluster.write_cluster_csv(outfilepath)
 
