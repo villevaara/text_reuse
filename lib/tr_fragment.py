@@ -1,9 +1,11 @@
 import re
 
-from text_reuse_octavoapi_common import (
+from lib.text_reuse_octavoapi_common import (
     get_text_for_document_id_from_api,
+    get_headers_from_document_text,
+    get_header_for_textindex,
     )
-from text_reuse_common import (
+from lib.text_reuse_common import (
     get_location_from_estc,
     get_author_from_estc,
     get_year_from_estc,
@@ -31,6 +33,7 @@ class TextReuseFragment(object):
         self.find_start_index = -1
         self.find_end_index = -1
         self.document_length = None
+        self.preceding_header = None
 
     def add_metadata(self, good_metadata):
         self.location = get_location_from_estc(
@@ -43,6 +46,11 @@ class TextReuseFragment(object):
             self.ecco_id, good_metadata)
         self.title = get_title_from_estc(
             self.ecco_id, good_metadata)
+
+    def add_headerdata(self, headerdata):
+        header_text = get_header_for_textindex(
+            self.find_start_index, headerdata)
+        self.preceding_header = header_text
 
     def add_context(self, window_size=2000):
         document_text_data = get_text_for_document_id_from_api(self.ecco_id)
@@ -85,3 +93,6 @@ class TextReuseFragment(object):
 
         self.text_after = (document_text_stripped[
             context_after_start_index:context_after_end_index])
+
+        headerdata = get_headers_from_document_text(document_text)
+        self.add_headerdata(headerdata)

@@ -1,6 +1,6 @@
 from requests import get
 import csv
-from text_reuse_common import (
+from lib.text_reuse_common import (
     # load_good_metadata,
     get_author_from_estc,
     get_year_from_estc,
@@ -249,26 +249,27 @@ def get_header_for_textindex(start_index, headerdata):
     return header_text
 
 
-# !!! old !!!
-def get_cluster_coverage_for_document(document_api_data, document_length):
-    docs_data = document_api_data
-    cluster_coverage = [0] * document_length
+# # !!! old !!!
+# DELETE not in use, can be deleted
+# def get_cluster_coverage_for_document(document_api_data, document_length):
+#     docs_data = document_api_data
+#     cluster_coverage = [0] * document_length
 
-    max_end_i = 0
-    for result in docs_data:
-        cluster_end_i = result.get('endIndex')
-        if (max_end_i < cluster_end_i):
-            max_end_i = cluster_end_i
-    if (max_end_i != 0):
-        cluster_coverage = [0] * max_end_i
-        print("new length: " + str(max_end_i))
+#     max_end_i = 0
+#     for result in docs_data:
+#         cluster_end_i = result.get('endIndex')
+#         if (max_end_i < cluster_end_i):
+#             max_end_i = cluster_end_i
+#     if (max_end_i != 0):
+#         cluster_coverage = [0] * max_end_i
+#         print("new length: " + str(max_end_i))
 
-    # !!! doesn't really do what's intended: should refer to indices in orig document only
-    # fix indices when good data available!!
-    for result in docs_data:  # this stuff might easily be off by one.
-        cluster_start_i = int(result.get('startIndex'))
-        cluster_end_i = int(result.get('endIndex'))
-        # print(cluster_end_i)
-        for i in range(cluster_start_i, cluster_end_i):
-            cluster_coverage[i] = cluster_coverage[i] + 1
-    return cluster_coverage
+#     # !!! doesn't really do what's intended: should refer to indices in orig document only
+#     # fix indices when good data available!!
+#     for result in docs_data:  # this stuff might easily be off by one.
+#         cluster_start_i = int(result.get('startIndex'))
+#         cluster_end_i = int(result.get('endIndex'))
+#         # print(cluster_end_i)
+#         for i in range(cluster_start_i, cluster_end_i):
+#             cluster_coverage[i] = cluster_coverage[i] + 1
+#     return cluster_coverage

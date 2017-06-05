@@ -1,4 +1,4 @@
-from text_reuse_octavoapi_common import (
+from lib.text_reuse_octavoapi_common import (
     # get_nodes,
     # write_nodes_csv,
     # get_clusters,
@@ -18,7 +18,7 @@ from text_reuse_octavoapi_common import (
     get_start_and_end_indices_for_cluster_and_document,
     # write_coverage_as_csv,
     )
-from text_reuse_common import (
+from lib.text_reuse_common import (
     load_good_metadata
     )
 # import plotly.plotly as py
