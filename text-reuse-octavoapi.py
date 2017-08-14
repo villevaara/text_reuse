@@ -111,9 +111,10 @@ good_metadata = load_good_metadata(good_metadata_jsonfile)
 # -------------------------------------------------------
 
 # document_id = "0825300109" # Bayle 1736
-document_id = 1611003000  # madeville fable 1714
+# document_id = 1611003000  # madeville fable 1714
 # document_id = 1313600106  # hume history
 # document_id = "0429000102"  # hume history, tudor vol2 (elizabeth)
+document_id = "0145100107"  # hume history 1778, 5/8 tudor2 elizabeth
 
 print("Getting document length...")
 document_length = get_document_length_from_api(document_id)
@@ -153,56 +154,70 @@ cluster_text = plotdata.get('cluster_text')
 headerhits = get_clusters_by_header(headers,
                                     enriched_cluster_data,
                                     document_id)
-write_headerhit_summary_csv(headerhits, "headerhits_summary.csv")
+
+filename_prefix = "history_5_8_"
+write_headerhit_summary_csv(headerhits, (
+                            filename_prefix + "headerhits_summary.csv"))
+
+# TODO: headerhit-class
+# TODO: api-request -class. methods:
+# TODO: 1. create request string
+# TODO: 2. query
+# TODO: 3. get results & methods for saving results as json / csv
+
 # print(type(cluster_text))
 # print(len(cluster_text))
 # print(cluster_text[15000:16000])
 # print(cluster_coverage)
-print("Drawing plot...")
-plot_x = list(range(0, len(plotdata.get('cluster_coverage'))))
-print("x length: " + str(len(plot_x)))
-plot_y = ["Reuse"]
-plot_z = [cluster_coverage]
-plot_text = [cluster_text]
-print("z length: " + str(len(plot_z)))
 
-# write_coverage_as_csv(hume_coverage)
+# plotting:
+# ----------------------------------
 
-plot_data = [
-    go.Heatmap(
-        z=plot_z,
-        x=plot_x,
-        y=plot_y,
-        # text=plot_text,
-        colorscale='Viridis',
-    )
-]
+# print("Drawing plot...")
+# plot_x = list(range(0, len(plotdata.get('cluster_coverage'))))
+# print("x length: " + str(len(plot_x)))
+# plot_y = ["Reuse"]
+# plot_z = [cluster_coverage]
+# plot_text = [cluster_text]
+# print("z length: " + str(len(plot_z)))
 
-layout = go.Layout(
-    title='Hume: The history of England under the House of Tudor, vol. 2 - Elizabeth (1759)',
-    xaxis=dict(ticks='', nticks=20),
-    yaxis=dict(ticks=''),
-    height=250
-)
+# # write_coverage_as_csv(hume_coverage)
 
 # plot_data = [
-#     go.Scatter(
-#         # z=plot_z,
+#     go.Heatmap(
+#         z=plot_z,
 #         x=plot_x,
-#         y=cluster_coverage,
-#         text=plot_text,
-#         # colorscale='Viridis',
-#         # mode="lines"
-#         hoverinfo='text',
+#         y=plot_y,
+#         # text=plot_text,
+#         colorscale='Viridis',
 #     )
 # ]
 
 # layout = go.Layout(
-#     showlegend=False
+#     title='Hume: The history of England under the House of Tudor, vol. 2 - Elizabeth (1778)',
+#     xaxis=dict(ticks='', nticks=20),
+#     yaxis=dict(ticks=''),
+#     height=250
 # )
 
+# # plot_data = [
+# #     go.Scatter(
+# #         # z=plot_z,
+# #         x=plot_x,
+# #         y=cluster_coverage,
+# #         text=plot_text,
+# #         # colorscale='Viridis',
+# #         # mode="lines"
+# #         hoverinfo='text',
+# #     )
+# # ]
 
-print("making fig")
-fig = go.Figure(data=plot_data, layout=layout)
-print("displaying fig")
-po.offline.plot(fig)
+# # layout = go.Layout(
+# #     showlegend=False
+# # )
+
+
+# print("making fig")
+# fig = go.Figure(data=plot_data, layout=layout)
+# print("displaying fig")
+# po.offline.plot(fig)
