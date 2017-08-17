@@ -21,7 +21,7 @@ def get_clusters(data_docs):
 
 
 def get_document_length_from_api(document_id):
-    api_request = ("https://vm0542.kaj.pouta.csc.fi/ecco_octavo_api/search" +
+    api_request = ("https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search" +
                    "?query=<DOCUMENT§documentID:" +
                    str(document_id) +
                    "§DOCUMENT>&pretty&limit=-1&field=documentLength")
@@ -39,7 +39,7 @@ def get_cluster_data_for_document_id_from_api(document_id, testing=False):
         limit_timeout = "&limit=-1&timeout=-1"
 
     api_request = (
-        "https://vm0542.kaj.pouta.csc.fi/eccocluster_octavo_api/search" +
+        "https://vm0824.kaj.pouta.csc.fi/octavo/eccocluster/search" +
         "?query=documentID:" +
         str(document_id) +
         "&field=documentID&field=title&field=clusterID&field=startIndex" +
@@ -58,7 +58,7 @@ def get_wide_cluster_data_for_document_id_from_api(document_id, testing=False,
         limit_timeout = "&limit=-1&timeout=-1"
 
     api_request = (
-        "https://vm0542.kaj.pouta.csc.fi/eccocluster_octavo_api/search" +
+        "https://vm0824.kaj.pouta.csc.fi/octavo/eccocluster/search" +
         "?query=<CLUSTER§<CLUSTER§documentID:" +
         str(document_id) +
         "§clusterID>§CLUSTER>" +
@@ -212,7 +212,7 @@ def get_text_for_document_id_from_api(document_id, testing=False):
     else:
         limit_timeout = "&limit=-1&timeout=-1"
 
-    api_request = ("https://vm0542.kaj.pouta.csc.fi/ecco_octavo_api/search" +
+    api_request = ("https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search" +
                    "?query=<DOCUMENT§documentID:" +
                    str(document_id) +
                    "§DOCUMENT>&field=content&field=collectionID" +

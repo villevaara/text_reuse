@@ -4,7 +4,8 @@ import csv
 
 class TextReuseCluster(object):
 
-    def __init__(self, cluster_id, fragment_list):
+    def __init__(self, document_id, cluster_id, fragment_list):
+        self.document_id = document_id
         self.cluster_id = cluster_id
         self.fragment_list = fragment_list
         self.fragment_list.sort(key=lambda x: x.year, reverse=False)
@@ -42,6 +43,10 @@ class TextReuseCluster(object):
                     retlist.append(fragment)
         return retlist
 
+    def filter_out_author(self, author, ignore_id=""):
+        self.fragment_list = (
+            self.get_fragments_filter_out_author(author, ignore_id))
+
     def get_fragments_filter_out_document_id(self, document_id):
         retlist = []
         for fragment in self.fragment_list:
@@ -56,6 +61,10 @@ class TextReuseCluster(object):
                 retlist.append(fragment)
         return retlist
 
+    def filter_out_year_below(self, year):
+        self.fragment_list = (
+            self.get_fragments_filter_out_year_below(year))
+
     def get_fragments_filter_out_year_above(self, year):
         retlist = []
         for fragment in self.fragment_list:
@@ -63,11 +72,22 @@ class TextReuseCluster(object):
                 retlist.append(fragment)
         return retlist
 
+    def filter_out_year_above(self, year):
+        self.fragment_list = (
+            self.get_fragments_filter_out_year_above(year))
+
     def get_number_of_authors(self):
         authors = set()
         for fragment in self.fragment_list:
             authors.add(fragment.author)
         return len(authors)
+
+    def add_cluster_groups(self):
+        for fragment in self.fragment_list:
+            if str(fragment.ecco_id) == self.document_id:
+                self.group_name = fragment.preceding_header
+                self.group_id = fragment.preceding_header_index
+                break
 
     def write_cluster_csv(self, outfilepath, include_header_row=True,
                           method='w'):

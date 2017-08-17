@@ -1,10 +1,4 @@
 from lib.text_reuse_octavoapi_common import (
-    # get_nodes,
-    # write_nodes_csv,
-    # get_clusters,
-    # get_edges,
-    # write_edges_csv,
-    # write_edges_with_clusterids_csv,
     get_document_length_from_api,
     # get_cluster_data_for_document_id_from_api,
     # get_wide_cluster_data_for_document_id_from_api,
@@ -125,8 +119,9 @@ print("Getting cluster data...")
 enriched_cluster_data = (
     get_cluster_data_for_document_id_from_api_filters(document_id,
                                                       good_metadata,
-                                                      years_min=0,
-                                                      years_max=50,
+                                                      originals_only=False,
+                                                      years_min=-1000,
+                                                      years_max=1,
                                                       ))
 
 document_text = get_text_for_document_id_from_api(
