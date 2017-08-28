@@ -1,16 +1,23 @@
 
 from lib.text_reuse_octavoapi_common import (
-    get_wide_cluster_data_for_document_id_from_api,
+    # get_wide_cluster_data_for_document_id_from_api,
     get_headers_from_document_text,
-    get_text_for_document_id_from_api
+    # get_text_for_document_id_from_api
     )
 from lib.tr_fragment import TextReuseFragment
 from lib.text_reuse_common import (
     load_good_metadata
     )
 from lib.tr_cluster import TextReuseCluster
+from lib.octavo_api_client import (
+    OctavoEccoClient,
+    OctavoEccoClusterClient
+    )
 import csv
-from lib.utils_common import create_dir_if_not_exists
+from lib.utils_common import (
+    create_dir_if_not_exists,
+    get_current_date_string,
+    )
 from copy import deepcopy
 import getopt
 import sys
@@ -22,7 +29,10 @@ def get_fragmentlist(cluster_data, get_octavo_indices=False,
 
     headerdata = None
     if context_sole_id is not "":
-        document_data = get_text_for_document_id_from_api(context_sole_id)
+        ecco_api_client = OctavoEccoClient()
+        document_data = ecco_api_client.get_text_for_document_id(
+            context_sole_id)
+        # document_data = get_text_for_document_id_from_api(context_sole_id)
         document_text = document_data.get('text')
         headerdata = get_headers_from_document_text(document_text)
 
@@ -98,6 +108,7 @@ def get_cluster_list(fragment_list, add_cluster_groups=True):
 
 def get_cluster_list_with_filters(cluster_list,
                                   filter_out_author="",
+                                  author_ignore_id="",
                                   filter_out_year_below=-1,
                                   filter_out_year_above=-1,):
     print("> Filtering cluster list ...")
@@ -106,7 +117,8 @@ def get_cluster_list_with_filters(cluster_list,
     for cluster in cluster_list:
         results_cluster = deepcopy(cluster)
         if filter_out_author != "":
-            results_cluster.filter_out_author(filter_out_author)
+            results_cluster.filter_out_author(filter_out_author,
+                                              author_ignore_id)
         if filter_out_year_above != -1:
             results_cluster.filter_out_year_above(filter_out_year_above)
         if filter_out_year_below != -1:
@@ -119,11 +131,21 @@ def get_cluster_list_with_filters(cluster_list,
     return cluster_list_results
 
 
-def write_cluster_list_results_csv(cluster_list, outpath_prefix):
+def get_outpath_prefix_with_date(outpath_prefix):
+    outpath_prefix = get_current_date_string() + "-" + outpath_prefix
+    return outpath_prefix
+
+
+def write_cluster_list_results_csv(cluster_list, outpath_prefix,
+                                   include_date=False):
+
     print("> Writing cluster list as csv ...")
     group_ids = set()
     for cluster in cluster_list:
         group_ids.add(cluster.group_id)
+
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
 
     for group_id in group_ids:
         outfilepath = "output/" + outpath_prefix + "/by_header/"
@@ -156,13 +178,17 @@ def write_cluster_list_results_csv(cluster_list, outpath_prefix):
 def get_start_params(argv):
     document_id = "0145100107"
     filter_out_author = "Hume, David (1711-1776)"
-    filter_out_year_below = 1761
+    filter_out_year_below = -1
+    filter_out_year_above = -1
+    testing_amount = -1
 
     try:
         opts, args = getopt.getopt(argv, "",
                                    ["document_id=",
                                     "filter_out_author=",
-                                    "filter_out_year_below="]
+                                    "filter_out_year_below=",
+                                    "filter_out_year_above=",
+                                    "testing_amount="]
                                    )
     except getopt.GetoptError:
         sys.exit(2)
@@ -173,18 +199,88 @@ def get_start_params(argv):
             filter_out_author = arg
         elif opt == "--filter_out_year_below":
             filter_out_year_below = arg
+        elif opt == "--filter_out_year_above":
+            filter_out_year_above = arg
+        elif opt == "--testing_amount":
+            testing_amount = arg
 
     author_pathpart = filter_out_author.lower()
     author_pathpart = author_pathpart.split('(')[0].strip()
     author_pathpart = author_pathpart.replace(', ', '_')
-    year_below_pathpart = (str(filter_out_year_below) + "_below")
+
+    if filter_out_year_below != -1:
+        year_below_pathpart = ("-" + str(filter_out_year_below) + "_below")
+    else:
+        year_below_pathpart = ""
+    if filter_out_year_above != -1:
+        year_above_pathpart = ("-" + str(filter_out_year_above) + "_above")
+    else:
+        year_above_pathpart = ""
+
     outpath_prefix = (
-        author_pathpart + "-" + document_id + "-" + year_below_pathpart)
+        author_pathpart + "-" +
+        document_id +
+        year_below_pathpart +
+        year_above_pathpart)
 
     return(document_id,
            filter_out_author,
            filter_out_year_below,
-           outpath_prefix)
+           filter_out_year_above,
+           outpath_prefix,
+           testing_amount)
+
+
+def get_cluster_coverage_data(document_id_to_cover, cluster_list):
+    ecco_api_client = OctavoEccoClient()
+    document_text = ecco_api_client.get_text_for_document_id(
+        document_id_to_cover).get('text')
+    # document_text = get_text_for_document_id_from_api(
+    #     document_id_to_cover).get('text')
+    document_length = len(document_text)
+
+    # find cluster text location in original text!
+    # for i in range(0, document_length):
+    #     pass
+    # continue from here!
+    # add proper octavo coverage data
+    # add actual text, previous headers
+
+    # if end_index > doc_length expand doc
+    for cluster in cluster_list:
+        if cluster.group_end_index > document_length:
+            document_length = cluster.group_end_index
+
+    cluster_coverage = [0] * document_length
+    # cluster_text = [""] * document_length
+
+    for cluster in cluster_list:
+        start = cluster.group_start_index
+        end = cluster.group_end_index
+        length = cluster.get_length()
+        print("s: " + str(start) + " e: " +
+              str(end) + " l: " + str(length))
+        for i in range(start, end + 1):
+            cluster_coverage[i] = cluster_coverage[i] + length
+
+    return cluster_coverage
+
+
+def write_cluster_coverage_as_csv(coverage_data,
+                                  outpath_prefix,
+                                  include_date=False):
+
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+
+    outdir = "output/" + outpath_prefix + "/"
+    create_dir_if_not_exists(outdir)
+    output_csvfile = outdir + "cluster_coverage.csv"
+    with open(output_csvfile, 'w') as coverage_file:
+        csvwriter = csv.writer(coverage_file)
+        csvwriter.writerow(['Coverage'])
+        for row in coverage_data:
+            csvwriter.writerow([row])
 
 
 # get fragments with:
@@ -202,14 +298,20 @@ def get_start_params(argv):
 
 document_id = "0145100107"  # hume history 1778, 5/8 tudor2 elizabeth
 author_to_filter = "Hume, David (1711-1776)"
-filter_out_year_below = 1761
+filter_out_year_below = -1
 outpath_prefix = "history5_8_not_hume"
+
+# document_id = 1611003000  # madeville fable 1714
+
 
 (
     document_id,
     author_to_filter,
     filter_out_year_below,
-    outpath_prefix) = get_start_params(sys.argv[1:])
+    filter_out_year_above,
+    outpath_prefix,
+    testing_amount
+    ) = get_start_params(sys.argv[1:])
 
 
 # get metadata
@@ -220,11 +322,14 @@ print("  >> Done!")
 
 # get doc from api
 
-cluster_data = get_wide_cluster_data_for_document_id_from_api(
-    document_id, testing=False, testing_amount=1000)
+cluster_api_client = OctavoEccoClusterClient(limit=testing_amount)
+cluster_data = cluster_api_client.get_wide_cluster_data_for_document_id(
+    document_id)
+# cluster_data = get_wide_cluster_data_for_document_id_from_api(
+#     document_id, testing_amount=testing_amount)
 
 fragment_list = get_fragmentlist(cluster_data,
-                                 get_octavo_indices=False,
+                                 get_octavo_indices=True,
                                  window_size=0,
                                  context_sole_id=document_id)
 
@@ -233,9 +338,20 @@ cluster_list = get_cluster_list(fragment_list)
 cluster_list_filtered = get_cluster_list_with_filters(
     cluster_list=cluster_list,
     filter_out_author=author_to_filter,
-    filter_out_year_below=1761)
+    author_ignore_id="",
+    filter_out_year_below=filter_out_year_below,
+    filter_out_year_above=filter_out_year_above)
 
-write_cluster_list_results_csv(cluster_list_filtered, outpath_prefix)
+coverage_data = get_cluster_coverage_data(document_id, cluster_list_filtered)
+
+
+write_cluster_list_results_csv(cluster_list_filtered,
+                               outpath_prefix,
+                               include_date=True)
+write_cluster_coverage_as_csv(coverage_data,
+                              outpath_prefix,
+                              include_date=True)
+
 
 # TODO
 # * clusterset -class
@@ -248,28 +364,3 @@ write_cluster_list_results_csv(cluster_list_filtered, outpath_prefix)
 # total coverage of document by character
 # by others
 # by all editions of hume -> what parts have been revised?
-
-# outfilepath = "output/" + outpath_prefix + "/first_others/"
-# create_dir_if_not_exists(outfilepath)
-# # drop all cluster_list not starting with fable 1714
-# for cluster in cluster_list:
-#     # first not fable:
-#     if cluster.fragment_list[0].ecco_id != document_id:
-#         continue
-#     # no others than author in
-#     if cluster.get_number_of_authors() < 2:
-#         continue
-#     cluster.write_cluster_csv(outfilepath)
-
-
-# outfilepath = "output/" + outpath_prefix + "/not_first/"
-# create_dir_if_not_exists(outfilepath)
-# # drop all cluster_list starting with fable
-# for cluster in cluster_list:
-#     # first fable:
-#     if cluster.fragment_list[0].ecco_id == document_id:
-#         continue
-#     # no others than mandeville in
-#     if cluster.get_number_of_authors() < 2:
-#         continue
-#     cluster.write_cluster_csv(outfilepath)

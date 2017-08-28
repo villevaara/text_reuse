@@ -6,6 +6,7 @@ from lib.text_reuse_common import (
     get_year_from_estc,
     get_estcid_from_estc)
 import re
+from lib.octavo_api_client import OctavoEccoClusterClient
 
 
 def get_clusters(data_docs):
@@ -32,43 +33,45 @@ def get_document_length_from_api(document_id):
     return document_length
 
 
-def get_cluster_data_for_document_id_from_api(document_id, testing=False):
-    if testing:
-        limit_timeout = "&limit=10&timeout=30"
-    else:
-        limit_timeout = "&limit=-1&timeout=-1"
+# # moved to octavo_api_client.py
+# def get_cluster_data_for_document_id_from_api(document_id, testing=False):
+#     if testing:
+#         limit_timeout = "&limit=10&timeout=30"
+#     else:
+#         limit_timeout = "&limit=-1&timeout=-1"
 
-    api_request = (
-        "https://vm0824.kaj.pouta.csc.fi/octavo/eccocluster/search" +
-        "?query=documentID:" +
-        str(document_id) +
-        "&field=documentID&field=title&field=clusterID&field=startIndex" +
-        "&field=endIndex&field=avgLength&field=text" +
-        limit_timeout)
-    response = get(api_request)
-    data = response.json().get('results').get('docs')
-    return data
+#     api_request = (
+#         "https://vm0824.kaj.pouta.csc.fi/octavo/eccocluster/search" +
+#         "?query=documentID:" +
+#         str(document_id) +
+#         "&field=documentID&field=title&field=clusterID&field=startIndex" +
+#         "&field=endIndex&field=avgLength&field=text" +
+#         limit_timeout)
+#     response = get(api_request)
+#     data = response.json().get('results').get('docs')
+#     return data
 
 
-def get_wide_cluster_data_for_document_id_from_api(document_id, testing=False,
-                                                   testing_amount=100):
-    if testing:
-        limit_timeout = "&limit=" + str(testing_amount) + "&timeout=120"
-    else:
-        limit_timeout = "&limit=-1&timeout=-1"
+# # moved to octavo_api_client.py
+# def get_wide_cluster_data_for_document_id_from_api(document_id,
+#                                                    testing_amount=100):
+#     if testing_amount is not None:
+#         limit_timeout = "&limit=" + str(testing_amount) + "&timeout=120"
+#     else:
+#         limit_timeout = "&limit=-1&timeout=-1"
 
-    api_request = (
-        "https://vm0824.kaj.pouta.csc.fi/octavo/eccocluster/search" +
-        "?query=<CLUSTER§<CLUSTER§documentID:" +
-        str(document_id) +
-        "§clusterID>§CLUSTER>" +
-        "&field=documentID&field=title&field=clusterID&field=startIndex" +
-        "&field=endIndex&field=text" + limit_timeout)
-    print("Querying API with: " +
-          api_request)
-    response = get(api_request)
-    data = response.json().get('results').get('docs')
-    return data
+#     api_request = (
+#         "https://vm0824.kaj.pouta.csc.fi/octavo/eccocluster/search" +
+#         "?query=<CLUSTER§<CLUSTER§documentID:" +
+#         str(document_id) +
+#         "§clusterID>§CLUSTER>" +
+#         "&field=documentID&field=title&field=clusterID&field=startIndex" +
+#         "&field=endIndex&field=text" + limit_timeout)
+#     print("Querying API with: " +
+#           api_request)
+#     response = get(api_request)
+#     data = response.json().get('results').get('docs')
+#     return data
 
 
 def enrich_cluster_data(cluster_data, good_metadata):
@@ -152,9 +155,14 @@ def get_cluster_data_for_document_id_from_api_filters(document_id,
                                                       originals_only=True,
                                                       years_min=-1000,
                                                       years_max=1000,
-                                                      testing=False):
+                                                      testing_amount=-1):
 
-    data = get_wide_cluster_data_for_document_id_from_api(document_id, testing)
+    # data = get_wide_cluster_data_for_document_id_from_api(document_id,
+    #                                                       testing_amount)
+
+    api_client = OctavoEccoClusterClient(limit=testing_amount)
+    data = api_client.get_wide_cluster_data_for_document_id(document_id)
+
     print("Orig data length:" + str(len(data)))
 
     document_id = str(document_id)
@@ -206,23 +214,24 @@ def write_coverage_as_csv(coverage_data):
             csvwriter.writerow([row])
 
 
-def get_text_for_document_id_from_api(document_id, testing=False):
-    if testing:
-        limit_timeout = "&limit=10&timeout=30"
-    else:
-        limit_timeout = "&limit=-1&timeout=-1"
+# # moved to octavo_api_client.py
+# def get_text_for_document_id_from_api(document_id, testing=False):
+#     if testing:
+#         limit_timeout = "&limit=10&timeout=30"
+#     else:
+#         limit_timeout = "&limit=-1&timeout=-1"
 
-    api_request = ("https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search" +
-                   "?query=<DOCUMENT§documentID:" +
-                   str(document_id) +
-                   "§DOCUMENT>&field=content&field=collectionID" +
-                   limit_timeout)
-    response = get(api_request)
-    text = response.json().get('results').get('docs')[0].get('content')
-    collection = (
-        response.json().get('results').get('docs')[0].get('collectionID'))
-    retdict = {'text': text, 'collection': collection}
-    return retdict
+#     api_request = ("https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search" +
+#                    "?query=<DOCUMENT§documentID:" +
+#                    str(document_id) +
+#                    "§DOCUMENT>&field=content&field=collectionID" +
+#                    limit_timeout)
+#     response = get(api_request)
+#     text = response.json().get('results').get('docs')[0].get('content')
+#     collection = (
+#         response.json().get('results').get('docs')[0].get('collectionID'))
+#     retdict = {'text': text, 'collection': collection}
+#     return retdict
 
 
 def get_headers_from_document_text(document_text):
@@ -264,29 +273,3 @@ def get_header_and_index_for_textindex(start_index, headerdata):
         else:
             break
     return {'text': header_text, 'index': header_index}
-
-
-# # !!! old !!!
-# DELETE not in use, can be deleted
-# def get_cluster_coverage_for_document(document_api_data, document_length):
-#     docs_data = document_api_data
-#     cluster_coverage = [0] * document_length
-
-#     max_end_i = 0
-#     for result in docs_data:
-#         cluster_end_i = result.get('endIndex')
-#         if (max_end_i < cluster_end_i):
-#             max_end_i = cluster_end_i
-#     if (max_end_i != 0):
-#         cluster_coverage = [0] * max_end_i
-#         print("new length: " + str(max_end_i))
-
-#     # !!! doesn't really do what's intended: should refer to indices in orig document only
-#     # fix indices when good data available!!
-#     for result in docs_data:  # this stuff might easily be off by one.
-#         cluster_start_i = int(result.get('startIndex'))
-#         cluster_end_i = int(result.get('endIndex'))
-#         # print(cluster_end_i)
-#         for i in range(cluster_start_i, cluster_end_i):
-#             cluster_coverage[i] = cluster_coverage[i] + 1
-#     return cluster_coverage

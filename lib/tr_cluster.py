@@ -11,6 +11,8 @@ class TextReuseCluster(object):
         self.fragment_list.sort(key=lambda x: x.year, reverse=False)
         self.group_name = None
         self.group_id = None
+        self.group_start_index = None
+        self.group_end_index = None
 
     def set_fragment_list(self, fragment_list):
         fragment_list.sort(key=lambda x: x.year, reverse=False)
@@ -57,7 +59,7 @@ class TextReuseCluster(object):
     def get_fragments_filter_out_year_below(self, year):
         retlist = []
         for fragment in self.fragment_list:
-            if fragment.year >= year:
+            if int(fragment.year) >= int(year):
                 retlist.append(fragment)
         return retlist
 
@@ -68,7 +70,7 @@ class TextReuseCluster(object):
     def get_fragments_filter_out_year_above(self, year):
         retlist = []
         for fragment in self.fragment_list:
-            if fragment.year <= year:
+            if int(fragment.year) <= int(year):
                 retlist.append(fragment)
         return retlist
 
@@ -87,6 +89,16 @@ class TextReuseCluster(object):
             if str(fragment.ecco_id) == self.document_id:
                 self.group_name = fragment.preceding_header
                 self.group_id = fragment.preceding_header_index
+
+                if fragment.octavo_start_index is not None:
+                    self.group_start_index = fragment.octavo_start_index
+                else:
+                    self.group_start_index = fragment.start_index
+
+                if fragment.octavo_end_index is not None:
+                    self.group_end_index = fragment.octavo_end_index
+                else:
+                    self.group_end_index = fragment.end_index
                 break
 
     def write_cluster_csv(self, outfilepath, include_header_row=True,

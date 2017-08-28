@@ -10,14 +10,14 @@ from lib.text_reuse_octavoapi_common import (
     get_headers_from_document_text,
     get_header_for_textindex,
     get_start_and_end_indices_for_cluster_and_document,
-    # write_coverage_as_csv,
+    write_coverage_as_csv,
     )
 from lib.text_reuse_common import (
     load_good_metadata
     )
 # import plotly.plotly as py
-import plotly.graph_objs as go
-import plotly.offline as po
+# import plotly.graph_objs as go
+# import plotly.offline as po
 import csv
 
 
@@ -122,7 +122,7 @@ enriched_cluster_data = (
                                                       originals_only=False,
                                                       years_min=-1000,
                                                       years_max=1,
-                                                      ))
+                                                      testing_amount=-1))
 
 document_text = get_text_for_document_id_from_api(
     document_id).get('text')
@@ -176,7 +176,7 @@ write_headerhit_summary_csv(headerhits, (
 # plot_text = [cluster_text]
 # print("z length: " + str(len(plot_z)))
 
-# # write_coverage_as_csv(hume_coverage)
+write_coverage_as_csv(cluster_coverage)
 
 # plot_data = [
 #     go.Heatmap(
