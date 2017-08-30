@@ -125,7 +125,8 @@ class TextReuseCluster(object):
                                     'find_start_index', 'find_end_index',
                                     'document_length', 'fragment_indices',
                                     'document_collection',
-                                    'group_name', 'group_id'])
+                                    'group_name', 'group_id',
+                                    'group_start_index', 'group_end_index'])
             for fragment in self.fragment_list:
                 csvwriter.writerow([fragment.cluster_id,
                                     fragment.ecco_id,
@@ -147,4 +148,6 @@ class TextReuseCluster(object):
                                     fragment.fragment_indices,
                                     fragment.document_collection,
                                     self.group_name,
-                                    self.group_id])
+                                    self.group_id,
+                                    self.group_start_index,
+                                    self.group_end_index])

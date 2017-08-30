@@ -6,7 +6,7 @@ class OctavoAPIClient(object):
     def __init__(self,
                  api_base_address="https://vm0824.kaj.pouta.csc.fi/octavo",
                  limit=100,
-                 timeout=30):
+                 timeout=300):
         self.api_base_address = api_base_address
         self.limit = limit
         self.timeout = timeout
@@ -29,7 +29,7 @@ class OctavoAPIClient(object):
 
 class OctavoEccoClusterClient(OctavoAPIClient):
 
-    def __init__(self, limit=-1, timeout=-1):
+    def __init__(self, limit=-1, timeout=300):
         super().__init__(limit=limit, timeout=timeout)
         self.api_request_start = (
             self.api_base_address +
@@ -89,7 +89,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
 
 class OctavoEccoClient(OctavoAPIClient):
 
-    def __init__(self, limit=-1, timeout=-1):
+    def __init__(self, limit=-1, timeout=300):
         super().__init__(limit=limit, timeout=timeout)
         self.api_request_start = (
             self.api_base_address +

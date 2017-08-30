@@ -231,8 +231,8 @@ def get_start_params(argv):
            testing_amount)
 
 
-def get_cluster_coverage_data(document_id_to_cover, cluster_list):
-    ecco_api_client = OctavoEccoClient()
+def get_cluster_coverage_data(document_id_to_cover, cluster_list,
+                              ecco_api_client):
     document_text = ecco_api_client.get_text_for_document_id(
         document_id_to_cover).get('text')
     # document_text = get_text_for_document_id_from_api(
@@ -258,8 +258,8 @@ def get_cluster_coverage_data(document_id_to_cover, cluster_list):
         start = cluster.group_start_index
         end = cluster.group_end_index
         length = cluster.get_length()
-        print("s: " + str(start) + " e: " +
-              str(end) + " l: " + str(length))
+        # print("s: " + str(start) + " e: " +
+        #       str(end) + " l: " + str(length))
         for i in range(start, end + 1):
             cluster_coverage[i] = cluster_coverage[i] + length
 
@@ -296,10 +296,13 @@ def write_cluster_coverage_as_csv(coverage_data,
 # group_id, group_name, unique cluster ids, cluster fragments (exl. Hume),
 # fragments (exl Hume & NA)
 
-document_id = "0145100107"  # hume history 1778, 5/8 tudor2 elizabeth
-author_to_filter = "Hume, David (1711-1776)"
-filter_out_year_below = -1
-outpath_prefix = "history5_8_not_hume"
+# -----------------------------------
+# legacy, params from command line now
+# -----------------------------------
+# document_id = "0145100107"  # hume history 1778, 5/8 tudor2 elizabeth
+# author_to_filter = "Hume, David (1711-1776)"
+# filter_out_year_below = -1
+# outpath_prefix = "history5_8_not_hume"
 
 # document_id = 1611003000  # madeville fable 1714
 
@@ -322,11 +325,11 @@ print("  >> Done!")
 
 # get doc from api
 
+ecco_api_client = OctavoEccoClient()
 cluster_api_client = OctavoEccoClusterClient(limit=testing_amount)
+
 cluster_data = cluster_api_client.get_wide_cluster_data_for_document_id(
     document_id)
-# cluster_data = get_wide_cluster_data_for_document_id_from_api(
-#     document_id, testing_amount=testing_amount)
 
 fragment_list = get_fragmentlist(cluster_data,
                                  get_octavo_indices=True,
@@ -342,7 +345,12 @@ cluster_list_filtered = get_cluster_list_with_filters(
     filter_out_year_below=filter_out_year_below,
     filter_out_year_above=filter_out_year_above)
 
-coverage_data = get_cluster_coverage_data(document_id, cluster_list_filtered)
+coverage_data = get_cluster_coverage_data(document_id, cluster_list_filtered,
+                                          ecco_api_client)
+
+
+def get_header_summary_data(cluster_list):
+    pass
 
 
 write_cluster_list_results_csv(cluster_list_filtered,

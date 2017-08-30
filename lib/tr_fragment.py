@@ -1,10 +1,11 @@
 import re
 
-from lib.text_reuse_octavoapi_common import (
-    get_text_for_document_id_from_api,
+from lib.headerdata import (
+    # get_text_for_document_id_from_api,
     get_headers_from_document_text,
     get_header_and_index_for_textindex,
     )
+
 from lib.text_reuse_common import (
     get_location_from_estc,
     get_author_from_estc,
@@ -12,6 +13,9 @@ from lib.text_reuse_common import (
     get_estcid_from_estc,
     get_title_from_estc,
     )
+
+from lib.octavo_api_client import (
+    OctavoEccoClient)
 
 
 class TextReuseFragment(object):
@@ -98,8 +102,11 @@ class TextReuseFragment(object):
                     get_octavo_indices=False):
 
         if headerdata_source is None and window_size < 1:
+            ecco_api_client = OctavoEccoClient()
             document_text_data = (
-                get_text_for_document_id_from_api(self.ecco_id))
+                ecco_api_client.get_text_for_document_id(self.ecco_id))
+            # document_text_data = (
+            #     get_text_for_document_id_from_api(self.ecco_id))
             document_text = document_text_data.get('text')
             document_collection = document_text_data.get('collection')
             self.document_collection = document_collection
