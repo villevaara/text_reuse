@@ -1,26 +1,39 @@
-
-from lib.text_reuse_octavoapi_common import (
-    # get_wide_cluster_data_for_document_id_from_api,
-    get_headers_from_document_text,
-    # get_text_for_document_id_from_api
-    )
+import getopt
+import sys
+from copy import deepcopy
+# from lib.text_reuse_octavoapi_common import (
+#     # get_wide_cluster_data_for_document_id_from_api,
+#     # get_headers_from_document_text,
+#     # get_text_for_document_id_from_api
+#     )
 from lib.tr_fragment import TextReuseFragment
-from lib.text_reuse_common import (
-    load_good_metadata
-    )
 from lib.tr_cluster import TextReuseCluster
+
 from lib.octavo_api_client import (
     OctavoEccoClient,
     OctavoEccoClusterClient
     )
-import csv
-from lib.utils_common import (
-    create_dir_if_not_exists,
-    get_current_date_string,
+
+from lib.text_reuse_common import (
+    load_good_metadata
     )
-from copy import deepcopy
-import getopt
-import sys
+
+# from lib.utils_common import (
+#     create_dir_if_not_exists,
+#     get_current_date_string,
+#     )
+
+from lib.headerdata import (
+    get_headers_for_document_id,
+    # get_headerdata_as_dict,
+    get_header_summary_data,
+    )
+
+from lib.output_csv import (
+    write_cluster_list_results_csv,
+    write_cluster_coverage_as_csv,
+    write_header_summarydata_csv,
+    )
 
 
 def get_fragmentlist(cluster_data, get_octavo_indices=False,
@@ -29,12 +42,12 @@ def get_fragmentlist(cluster_data, get_octavo_indices=False,
 
     headerdata = None
     if context_sole_id is not "":
-        ecco_api_client = OctavoEccoClient()
-        document_data = ecco_api_client.get_text_for_document_id(
-            context_sole_id)
-        # document_data = get_text_for_document_id_from_api(context_sole_id)
-        document_text = document_data.get('text')
-        headerdata = get_headers_from_document_text(document_text)
+        # ecco_api_client = OctavoEccoClient()
+        # document_data = ecco_api_client.get_text_for_document_id(
+        #     context_sole_id)
+        # # document_data = get_text_for_document_id_from_api(context_sole_id)
+        # document_text = document_data.get('text')
+        headerdata = get_headers_for_document_id(context_sole_id)
 
     cluster_data_length = len(cluster_data) - 1
     fragment_list = []
@@ -107,6 +120,7 @@ def get_cluster_list(fragment_list, add_cluster_groups=True):
 
 
 def get_cluster_list_with_filters(cluster_list,
+                                  require_orig_author_first=False,
                                   filter_out_author="",
                                   author_ignore_id="",
                                   filter_out_year_below=-1,
@@ -116,6 +130,9 @@ def get_cluster_list_with_filters(cluster_list,
 
     for cluster in cluster_list:
         results_cluster = deepcopy(cluster)
+        if require_orig_author_first:
+            if not results_cluster.orig_author_first():
+                continue
         if filter_out_author != "":
             results_cluster.filter_out_author(filter_out_author,
                                               author_ignore_id)
@@ -131,53 +148,10 @@ def get_cluster_list_with_filters(cluster_list,
     return cluster_list_results
 
 
-def get_outpath_prefix_with_date(outpath_prefix):
-    outpath_prefix = get_current_date_string() + "-" + outpath_prefix
-    return outpath_prefix
-
-
-def write_cluster_list_results_csv(cluster_list, outpath_prefix,
-                                   include_date=False):
-
-    print("> Writing cluster list as csv ...")
-    group_ids = set()
-    for cluster in cluster_list:
-        group_ids.add(cluster.group_id)
-
-    if include_date:
-        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
-
-    for group_id in group_ids:
-        outfilepath = "output/" + outpath_prefix + "/by_header/"
-        create_dir_if_not_exists(outfilepath)
-        outfile = outfilepath + str(group_id) + ".csv"
-        with open(outfile, 'w') as output_file:
-            csvwriter = csv.writer(output_file)
-            csvwriter.writerow(['cluster_id',
-                                'ecco_id',
-                                'estc_id',
-                                'author',
-                                'title',
-                                'preceding_header',
-                                'year',
-                                'location',
-                                'text_before', 'text', 'text_after',
-                                'preceding_header_index',
-                                'start_index', 'end_index',
-                                'find_start_index', 'find_end_index',
-                                'document_length', 'fragment_indices',
-                                'document_collection',
-                                'group_name', 'group_id'])
-        for cluster in cluster_list:
-            if cluster.group_id == group_id:
-                cluster.write_cluster_csv(outfile, include_header_row=False,
-                                          method='a')
-    print("  >> Done!")
-
-
 def get_start_params(argv):
     document_id = "0145100107"
     filter_out_author = "Hume, David (1711-1776)"
+    require_orig_author_first = False
     filter_out_year_below = -1
     filter_out_year_above = -1
     testing_amount = -1
@@ -186,6 +160,7 @@ def get_start_params(argv):
         opts, args = getopt.getopt(argv, "",
                                    ["document_id=",
                                     "filter_out_author=",
+                                    "require_orig_author_first=",
                                     "filter_out_year_below=",
                                     "filter_out_year_above=",
                                     "testing_amount="]
@@ -197,6 +172,8 @@ def get_start_params(argv):
             document_id = arg
         elif opt == "--filter_out_author":
             filter_out_author = arg
+        elif opt == "--require_orig_author_first":
+            require_orig_author_first = True
         elif opt == "--filter_out_year_below":
             filter_out_year_below = arg
         elif opt == "--filter_out_year_above":
@@ -212,19 +189,36 @@ def get_start_params(argv):
         year_below_pathpart = ("-" + str(filter_out_year_below) + "_below")
     else:
         year_below_pathpart = ""
+
     if filter_out_year_above != -1:
         year_above_pathpart = ("-" + str(filter_out_year_above) + "_above")
     else:
         year_above_pathpart = ""
 
+    if require_orig_author_first:
+        require_orig_author_first_pathpart = "-required_first"
+    else:
+        require_orig_author_first_pathpart = ""
+
     outpath_prefix = (
         author_pathpart + "-" +
         document_id +
         year_below_pathpart +
-        year_above_pathpart)
+        year_above_pathpart +
+        require_orig_author_first_pathpart)
+
+    print("params:" + "\n" +
+          "document_id: " + str(document_id) + "\n" +
+          "filter_out_author: " + str(filter_out_author) + "\n" +
+          "require_orig_author_first: " + str(require_orig_author_first) +
+          "\n" +
+          "filter_out_year_below: " + str(filter_out_year_below) + "\n" +
+          "filter_out_year_above: " + str(filter_out_year_above) + "\n" +
+          "testing_amount: " + str(testing_amount) + "\n")
 
     return(document_id,
            filter_out_author,
+           require_orig_author_first,
            filter_out_year_below,
            filter_out_year_above,
            outpath_prefix,
@@ -266,23 +260,6 @@ def get_cluster_coverage_data(document_id_to_cover, cluster_list,
     return cluster_coverage
 
 
-def write_cluster_coverage_as_csv(coverage_data,
-                                  outpath_prefix,
-                                  include_date=False):
-
-    if include_date:
-        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
-
-    outdir = "output/" + outpath_prefix + "/"
-    create_dir_if_not_exists(outdir)
-    output_csvfile = outdir + "cluster_coverage.csv"
-    with open(output_csvfile, 'w') as coverage_file:
-        csvwriter = csv.writer(coverage_file)
-        csvwriter.writerow(['Coverage'])
-        for row in coverage_data:
-            csvwriter.writerow([row])
-
-
 # get fragments with:
 # not hume
 # after 1761 (last part of original history published)
@@ -310,6 +287,7 @@ def write_cluster_coverage_as_csv(coverage_data,
 (
     document_id,
     author_to_filter,
+    require_orig_author_first,
     filter_out_year_below,
     filter_out_year_above,
     outpath_prefix,
@@ -341,6 +319,7 @@ cluster_list = get_cluster_list(fragment_list)
 cluster_list_filtered = get_cluster_list_with_filters(
     cluster_list=cluster_list,
     filter_out_author=author_to_filter,
+    require_orig_author_first=require_orig_author_first,
     author_ignore_id="",
     filter_out_year_below=filter_out_year_below,
     filter_out_year_above=filter_out_year_above)
@@ -348,9 +327,8 @@ cluster_list_filtered = get_cluster_list_with_filters(
 coverage_data = get_cluster_coverage_data(document_id, cluster_list_filtered,
                                           ecco_api_client)
 
-
-def get_header_summary_data(cluster_list):
-    pass
+header_summarydata = get_header_summary_data(cluster_list_filtered,
+                                             document_id)
 
 
 write_cluster_list_results_csv(cluster_list_filtered,
@@ -359,7 +337,10 @@ write_cluster_list_results_csv(cluster_list_filtered,
 write_cluster_coverage_as_csv(coverage_data,
                               outpath_prefix,
                               include_date=True)
-
+write_header_summarydata_csv(header_summarydata,
+                             outpath_prefix,
+                             outfile_suffix="",
+                             include_date=True)
 
 # TODO
 # * clusterset -class

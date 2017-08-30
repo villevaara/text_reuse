@@ -1,4 +1,3 @@
-
 import csv
 
 
@@ -33,6 +32,25 @@ class TextReuseCluster(object):
     def get_length(self):
         length = len(self.fragment_list)
         return length
+
+    def get_orig_author(self):
+        for fragment in self.fragment_list:
+            if fragment.document_id == self.document_id:
+                return fragment.author
+        return None
+
+    def orig_author_first(self):
+        orig_author = self.get_orig_author()
+        first_year = self.get_first_year()
+        first_year_fragments = (
+            self.get_fragments_filter_out_year_above(first_year))
+        first_year_authors = set()
+        for fragment in first_year_fragments:
+            first_year_authors.add(fragment.author)
+        if orig_author in first_year_authors:
+            return True
+        else:
+            return False
 
     def get_fragments_filter_out_author(self, author, ignore_id=""):
         retlist = []
@@ -78,11 +96,21 @@ class TextReuseCluster(object):
         self.fragment_list = (
             self.get_fragments_filter_out_year_above(year))
 
-    def get_number_of_authors(self):
+    def get_authors(self):
         authors = set()
         for fragment in self.fragment_list:
             authors.add(fragment.author)
+        return authors
+
+    def get_number_of_authors(self):
+        authors = self.get_authors()
         return len(authors)
+
+    def get_titles(self):
+        titles = set()
+        for fragment in self.fragment_list:
+            titles.add(fragment.title)
+        return titles
 
     def add_cluster_groups(self):
         for fragment in self.fragment_list:
