@@ -6,3 +6,5 @@ python tr_get_headerdata.py --document_id "0145100107" --filter_out_author "Hume
 
 MANDEVILLE, Fable 1714
 python tr_get_headerdata.py --document_id "1611003000" --filter_out_author "Mandeville, Bernard (1670-1733)" --filter_out_year_below 1714
+python tr_get_headerdata.py --document_id "1611003000" --filter_out_author "Mandeville, Bernard (1670-1733)" --filter_out_year_below 1714 --author_ignore_id "1611003000"
+python tr_get_headerdata.py --document_id "1611003000" --filter_out_author "Mandeville, Bernard (1670-1733)" --require_orig_author_first yes --filter_out_year_below 1714

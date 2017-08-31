@@ -83,12 +83,12 @@ def get_header_summary_data(cluster_list, document_id):
         unique_authors = len(authors)
         unique_titles = len(titles)
 
-        if len(authors > 0):
+        if len(authors) > 0:
             authors_text = str(authors)
         else:
             authors_text = ""
 
-        if len(titles > 0):
+        if len(titles) > 0:
             titles_text = str(titles)
         else:
             titles_text = ""

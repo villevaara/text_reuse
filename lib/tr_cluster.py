@@ -35,7 +35,7 @@ class TextReuseCluster(object):
 
     def get_orig_author(self):
         for fragment in self.fragment_list:
-            if fragment.document_id == self.document_id:
+            if fragment.ecco_id == self.document_id:
                 return fragment.author
         return None
 
@@ -114,6 +114,7 @@ class TextReuseCluster(object):
 
     def add_cluster_groups(self):
         for fragment in self.fragment_list:
+            # Find "seed" document, add metadata
             if str(fragment.ecco_id) == self.document_id:
                 self.group_name = fragment.preceding_header
                 self.group_id = fragment.preceding_header_index

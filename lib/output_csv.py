@@ -22,10 +22,11 @@ def write_cluster_list_results_csv(cluster_list, outpath_prefix,
     if include_date:
         outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
 
+    outdir = "output/" + outpath_prefix + "/by_header/"
+    create_dir_if_not_exists(outdir)
+
     for group_id in group_ids:
-        outfilepath = "output/" + outpath_prefix + "/by_header/"
-        create_dir_if_not_exists(outfilepath)
-        outfile = outfilepath + str(group_id) + ".csv"
+        outfile = outdir + str(group_id) + ".csv"
         with open(outfile, 'w') as output_file:
             csvwriter = csv.writer(output_file)
             csvwriter.writerow(['cluster_id',
@@ -55,10 +56,13 @@ def write_cluster_coverage_as_csv(coverage_data,
                                   outpath_prefix,
                                   include_date=False):
 
+    print("> Writing cluster coverage as csv ...")
+
     if include_date:
         outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
 
     outdir = "output/" + outpath_prefix + "/"
+
     create_dir_if_not_exists(outdir)
     output_csvfile = outdir + "cluster_coverage.csv"
     with open(output_csvfile, 'w') as coverage_file:
@@ -79,6 +83,7 @@ def write_header_summarydata_csv(header_summarydata,
         outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
 
     outdir = "output/" + outpath_prefix + "/"
+
     create_dir_if_not_exists(outdir)
     output_csvfile = (outdir + "header_summary" +
                       outfile_suffix + ".csv")
@@ -100,3 +105,22 @@ def write_header_summarydata_csv(header_summarydata,
                                     row.get('authors'),
                                     row.get('unique_titles'),
                                     row.get('titles')])
+
+
+def write_document_text_with_coverage_highlight(document_text,
+                                                outpath_prefix,
+                                                include_date=False):
+
+    print("> Writing document text with coverage highlights ...")
+
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+
+    outdir = "output/" + outpath_prefix + "/"
+
+    create_dir_if_not_exists(outdir)
+    output_txtfile = (outdir + "coverage_highlight" +
+                      ".txt")
+
+    with open(output_txtfile, 'w') as output_file:
+        output_file.write(document_text)

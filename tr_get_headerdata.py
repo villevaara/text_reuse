@@ -1,11 +1,8 @@
 import getopt
 import sys
+import time
 from copy import deepcopy
-# from lib.text_reuse_octavoapi_common import (
-#     # get_wide_cluster_data_for_document_id_from_api,
-#     # get_headers_from_document_text,
-#     # get_text_for_document_id_from_api
-#     )
+
 from lib.tr_fragment import TextReuseFragment
 from lib.tr_cluster import TextReuseCluster
 
@@ -18,14 +15,8 @@ from lib.text_reuse_common import (
     load_good_metadata
     )
 
-# from lib.utils_common import (
-#     create_dir_if_not_exists,
-#     get_current_date_string,
-#     )
-
 from lib.headerdata import (
     get_headers_for_document_id,
-    # get_headerdata_as_dict,
     get_header_summary_data,
     )
 
@@ -33,6 +24,7 @@ from lib.output_csv import (
     write_cluster_list_results_csv,
     write_cluster_coverage_as_csv,
     write_header_summarydata_csv,
+    write_document_text_with_coverage_highlight,
     )
 
 
@@ -53,6 +45,12 @@ def get_fragmentlist(cluster_data, get_octavo_indices=False,
     fragment_list = []
     i = 0
     print("items in list: " + str(len(cluster_data)))
+
+    if context_sole_id != "":
+        ecco_api_client = OctavoEccoClient()
+        document_text_data = (
+            ecco_api_client.get_text_for_document_id(context_sole_id))
+
     for item in cluster_data:
         print("Processing item: " + str(i) +
               " / " + str(cluster_data_length))
@@ -66,8 +64,10 @@ def get_fragmentlist(cluster_data, get_octavo_indices=False,
         fragment.add_metadata(good_metadata)
         if (context_sole_id == "") or (context_sole_id == fragment.ecco_id):
             fragment.add_context(window_size=window_size,
+                                 force_octavo_search=True,
                                  get_octavo_indices=get_octavo_indices,
-                                 headerdata_source=headerdata)
+                                 headerdata_source=headerdata,
+                                 document_text_data=document_text_data)
         fragment_list.append(fragment)
     print("  >> Done!")
     return fragment_list
@@ -97,25 +97,38 @@ def get_cluster_list(fragment_list, add_cluster_groups=True):
     for fragment in fragment_list:
         i = i + 1
         if i % 100 == 0:
-            print(str(i) + " / " + str(fragment_list_length))
+            print("  >> Finding cluster ids: " +
+                  str(i) + " / " + str(fragment_list_length))
         cluster_ids.add(fragment.cluster_id)
 
     cluster_ids_length = len(cluster_ids)
-    i = 0
     cluster_list = []
-    # this is really slow!
-    # -what about taking out values in list that already
-    # got caught?
+
+    start = time.time()
+    whole_start = time.time()
+    i = 0
     for cluster_id in cluster_ids:
         i = i + 1
         if i % 100 == 0:
-            print(str(i) + " / " + str(cluster_ids_length))
+            end = time.time()
+            print("  >> Creating cluster objects: " +
+                  str(i) + " / " + str(cluster_ids_length) +
+                  " -- Took: " + str(round((end - start), 1)) + "s")
+            start = time.time()
+
         fragments = get_fragments_of_cluster_id(fragment_list, cluster_id)
+        # remove found elements to speed up things
+        # shaves off about 1/3 of the time
+        for fragment in fragments:
+            fragment_list.remove(fragment)
+
         cluster = TextReuseCluster(document_id, cluster_id, fragments)
         cluster.add_cluster_groups()
         cluster_list.append(cluster)
 
     print("  >> Done!")
+    print("  >> Took: " +
+          str(round((time.time() - whole_start), 1)) + "s in total.")
     return cluster_list
 
 
@@ -151,6 +164,7 @@ def get_cluster_list_with_filters(cluster_list,
 def get_start_params(argv):
     document_id = "0145100107"
     filter_out_author = "Hume, David (1711-1776)"
+    author_ignore_id = ""
     require_orig_author_first = False
     filter_out_year_below = -1
     filter_out_year_above = -1
@@ -160,6 +174,7 @@ def get_start_params(argv):
         opts, args = getopt.getopt(argv, "",
                                    ["document_id=",
                                     "filter_out_author=",
+                                    "author_ignore_id=",
                                     "require_orig_author_first=",
                                     "filter_out_year_below=",
                                     "filter_out_year_above=",
@@ -167,11 +182,14 @@ def get_start_params(argv):
                                    )
     except getopt.GetoptError:
         sys.exit(2)
+
     for opt, arg in opts:
         if opt == "--document_id":
             document_id = arg
         elif opt == "--filter_out_author":
             filter_out_author = arg
+        elif opt == "--author_ignore_id":
+            author_ignore_id = arg
         elif opt == "--require_orig_author_first":
             require_orig_author_first = True
         elif opt == "--filter_out_year_below":
@@ -186,12 +204,12 @@ def get_start_params(argv):
     author_pathpart = author_pathpart.replace(', ', '_')
 
     if filter_out_year_below != -1:
-        year_below_pathpart = ("-" + str(filter_out_year_below) + "_below")
+        year_below_pathpart = ("-" + str(filter_out_year_below) + "_out_below")
     else:
         year_below_pathpart = ""
 
     if filter_out_year_above != -1:
-        year_above_pathpart = ("-" + str(filter_out_year_above) + "_above")
+        year_above_pathpart = ("-" + str(filter_out_year_above) + "_out_above")
     else:
         year_above_pathpart = ""
 
@@ -218,6 +236,7 @@ def get_start_params(argv):
 
     return(document_id,
            filter_out_author,
+           author_ignore_id,
            require_orig_author_first,
            filter_out_year_below,
            filter_out_year_above,
@@ -241,9 +260,10 @@ def get_cluster_coverage_data(document_id_to_cover, cluster_list,
     # add actual text, previous headers
 
     # if end_index > doc_length expand doc
-    for cluster in cluster_list:
-        if cluster.group_end_index > document_length:
-            document_length = cluster.group_end_index
+    # THIS SHOULD NEVER HAPPEN
+    # for cluster in cluster_list:
+    #     if cluster.group_end_index > document_length:
+    #         document_length = cluster.group_end_index
 
     cluster_coverage = [0] * document_length
     # cluster_text = [""] * document_length
@@ -259,6 +279,21 @@ def get_cluster_coverage_data(document_id_to_cover, cluster_list,
 
     return cluster_coverage
 
+
+def get_document_text_with_coverage_highlight(document_id, coverage_data,
+                                              ecco_api_client):
+    document_text = ecco_api_client.get_text_for_document_id(
+        document_id).get('text')
+    document_text_list = list(document_text)
+    document_length = len(document_text_list)
+
+    for char_index in range(0, document_length):
+        if coverage_data[char_index] == 0:
+            document_text_list[char_index] = (
+                document_text_list[char_index].upper())
+
+    document_text_results = "".join(document_text_list)
+    return document_text_results
 
 # get fragments with:
 # not hume
@@ -287,6 +322,7 @@ def get_cluster_coverage_data(document_id_to_cover, cluster_list,
 (
     document_id,
     author_to_filter,
+    author_ignore_id,
     require_orig_author_first,
     filter_out_year_below,
     filter_out_year_above,
@@ -320,12 +356,15 @@ cluster_list_filtered = get_cluster_list_with_filters(
     cluster_list=cluster_list,
     filter_out_author=author_to_filter,
     require_orig_author_first=require_orig_author_first,
-    author_ignore_id="",
+    author_ignore_id=author_ignore_id,
     filter_out_year_below=filter_out_year_below,
     filter_out_year_above=filter_out_year_above)
 
 coverage_data = get_cluster_coverage_data(document_id, cluster_list_filtered,
                                           ecco_api_client)
+doctext_with_coverage_highlight = (
+    get_document_text_with_coverage_highlight(document_id, coverage_data,
+                                              ecco_api_client))
 
 header_summarydata = get_header_summary_data(cluster_list_filtered,
                                              document_id)
@@ -337,6 +376,9 @@ write_cluster_list_results_csv(cluster_list_filtered,
 write_cluster_coverage_as_csv(coverage_data,
                               outpath_prefix,
                               include_date=True)
+write_document_text_with_coverage_highlight(doctext_with_coverage_highlight,
+                                            outpath_prefix,
+                                            include_date=True)
 write_header_summarydata_csv(header_summarydata,
                              outpath_prefix,
                              outfile_suffix="",

@@ -58,7 +58,9 @@ class TextReuseFragment(object):
             self.ecco_id, good_metadata)
 
     def add_headerdata(self, headerdata):
-        if self.find_start_index != -1:
+        if self.octavo_start_index is not None:
+            header_search_index = self.octavo_start_index
+        elif self.find_start_index != -1:
             header_search_index = self.find_start_index
         else:
             header_search_index = self.start_index
@@ -85,10 +87,13 @@ class TextReuseFragment(object):
                 len(orig_text_cut) - len(orig_text_cut.rstrip()))
             trailing_whitespace_string = (
                 ' ' * orig_text_cut_trailing_whitespaces)
+
             if method_ascii:
                 orig_text_cut = re.sub(r'[^\x00-\x7f]', r'', orig_text_cut)
+
             orig_text_cut = (
                 ' '.join(orig_text_cut.split()) + trailing_whitespace_string)
+
             if len(orig_text_cut) > fragment_index:
                 orig_cut_min = orig_cut_min - 1
             elif len(orig_text_cut) < fragment_index:
@@ -96,23 +101,25 @@ class TextReuseFragment(object):
             elif len(orig_text_cut) == fragment_index:
                 return orig_cut_min
 
+    # REFRACTOR! this is a mess
     def add_context(self, window_size=2000,
+                    force_octavo_search=False,
                     add_headerdata=True,
                     headerdata_source=None,
-                    get_octavo_indices=False):
+                    get_octavo_indices=False,
+                    document_text_data=None):
 
-        if headerdata_source is None and window_size < 1:
+        if document_text_data is None:
             ecco_api_client = OctavoEccoClient()
             document_text_data = (
                 ecco_api_client.get_text_for_document_id(self.ecco_id))
-            # document_text_data = (
-            #     get_text_for_document_id_from_api(self.ecco_id))
-            document_text = document_text_data.get('text')
-            document_collection = document_text_data.get('collection')
-            self.document_collection = document_collection
+
+        document_text = document_text_data.get('text')
+        document_collection = document_text_data.get('collection')
+        self.document_collection = document_collection
 
         # if collection is ecco1, convert to ascii. else unicode
-        if (window_size > 0):
+        if (window_size > 0) or force_octavo_search:
             if document_collection == "ecco1":
                 ascii_search = True
             else:

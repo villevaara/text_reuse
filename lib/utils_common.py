@@ -2,9 +2,11 @@ import os
 from datetime import datetime
 
 
-def create_dir_if_not_exists(directory_path):
+def create_dir_if_not_exists(directory_path, verbose=True):
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
+    if verbose:
+        print(directory_path)
 
 
 def get_current_date_string():
