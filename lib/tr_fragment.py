@@ -1,4 +1,5 @@
 import re
+from bisect import bisect_left
 
 from lib.headerdata import (
     # get_text_for_document_id_from_api,
@@ -77,29 +78,163 @@ class TextReuseFragment(object):
         fragment_start_index = document_text_stripped.find(search_text)
         return [fragment_start_index, document_text_stripped]
 
-    def __get_orig_index(self, fragment_index, orig_text, method_ascii):
-        orig_cut_min = fragment_index
+    def __context_search2(self, search_text, document_text, ascii_search):
+        if ascii_search:
+            document_text = re.sub(r'[^\x00-\x7f]',
+                                   r'', document_text)
+        document_text_stripped = ' '.join(document_text.split())
+        fragment_start_index = document_text_stripped.find(search_text)
+        if fragment_start_index != -1:
+            self.find_start_index = fragment_start_index
+            self.find_end_index = (fragment_start_index +
+                                   len(search_text))
+        return fragment_start_index
+
+    # this might me in some other object entirely...
+    def get_indexmap(self, orig_text, method_ascii):
+        whitespace_chars = [' ', '\t', '\n', '\r', '\x0b', '\x0c']
+        orig_text_length = len(orig_text)
+
+        # results to return. array (list) of fragmenttext_index,chars_lost
+        fragment_indices = []
+        chars_lost_list = []
+
+        # cumlative index of characters lost
+        chars_lost = 0
+
+        # set flags
+        # start with prev_char_hit -flag set to account for leading zeros
+        prev_char_hit = True
+        this_char_hit = False
+        save_pending = False
+
+        # iterate every char in text.
+        # add entry to index if previous char was lost, and current isn't
+        for char_index in range(0, orig_text_length):
+
+            if orig_text[char_index] in whitespace_chars:
+                this_char_hit = True
+            else:
+                this_char_hit = False
+
+            if prev_char_hit and this_char_hit:
+                chars_lost += 1
+                save_pending = True
+
+            prev_char_hit = this_char_hit
+
+            if method_ascii and ord(orig_text[char_index]) > 127:
+                # getting non-ascii: if ord(char) is > 127
+                this_char_hit = True
+                chars_lost += 1
+                save_pending = True
+
+            if save_pending and not this_char_hit:
+                fragment_index = char_index - chars_lost
+                fragment_indices.append(fragment_index)
+                chars_lost_list.append(chars_lost)
+                # results.append([fragment_index, chars_lost])
+                save_pending = False
+
+        if method_ascii:
+            method_description = "ascii"
+        else:
+            method_description = "unicode"
+
+        results = {'method': method_description,
+                   'fragment_index': fragment_indices,
+                   'chars_lost': chars_lost_list}
+        return results
+
+    # def __get_orig_index(self, fragment_index, orig_text, method_ascii):
+    #     orig_cut_min = fragment_index
+    #     while True:
+    #         orig_text_cut = orig_text[:orig_cut_min]
+    #         # number of whitespaces at end needs to be taken in account
+    #         # while loop order could be optimized
+    #         orig_text_cut_trailing_whitespaces = (
+    #             len(orig_text_cut) - len(orig_text_cut.rstrip()))
+    #         trailing_whitespace_string = (
+    #             ' ' * orig_text_cut_trailing_whitespaces)
+
+    #         if method_ascii:
+    #             orig_text_cut = re.sub(r'[^\x00-\x7f]', r'', orig_text_cut)
+
+    #         orig_text_cut = (
+    #             ' '.join(orig_text_cut.split()) + trailing_whitespace_string)
+
+    #         if len(orig_text_cut) > fragment_index:
+    #             orig_cut_min = orig_cut_min - 1
+    #         elif len(orig_text_cut) < fragment_index:
+    #             orig_cut_min = orig_cut_min + 10
+    #         elif len(orig_text_cut) == fragment_index:
+    #             return orig_cut_min
+
+    def set_fragment_encoding(self, document_text_data):
+
+        document_collection = document_text_data.get('collection')
+        document_text = document_text_data.get('text')
+
+        if document_collection == "ecco1":
+            ascii_search = True
+        else:
+            ascii_search = False
+
+        retried = False
+
         while True:
-            orig_text_cut = orig_text[:orig_cut_min]
-            # number of whitespaces at end needs to be taken in account
-            # while loop order could be optimized
-            orig_text_cut_trailing_whitespaces = (
-                len(orig_text_cut) - len(orig_text_cut.rstrip()))
-            trailing_whitespace_string = (
-                ' ' * orig_text_cut_trailing_whitespaces)
+            fragment_start_index = self.__context_search2(self.text,
+                                                          document_text,
+                                                          ascii_search)
 
-            if method_ascii:
-                orig_text_cut = re.sub(r'[^\x00-\x7f]', r'', orig_text_cut)
+            if fragment_start_index != -1:
+                self.find_start_index = fragment_start_index
+                if ascii_search:
+                    self.encoding = "ascii"
+                else:
+                    self.encoding = "unicode"
+                return self.encoding
 
-            orig_text_cut = (
-                ' '.join(orig_text_cut.split()) + trailing_whitespace_string)
+            elif fragment_start_index == -1 and not retried:
+                print(" > Fragment not found." +
+                      " Trying the other method (ascii/unicode)")
+                ascii_search = not ascii_search
+                retried = True
+                continue
 
-            if len(orig_text_cut) > fragment_index:
-                orig_cut_min = orig_cut_min - 1
-            elif len(orig_text_cut) < fragment_index:
-                orig_cut_min = orig_cut_min + 10
-            elif len(orig_text_cut) == fragment_index:
-                return orig_cut_min
+            elif fragment_start_index == -1 and retried:
+                print(" > !! Fragment still not found." +
+                      " No encoding set.")
+                return None
+
+    def find_octavo_index(self, index, octavo_indexmap):
+        fragment_indices = octavo_indexmap.get('fragment_index')
+        chars_lost = octavo_indexmap.get('chars_lost')
+
+        index_find_pos = bisect_left(fragment_indices, index)
+
+        # if fragment index is the last index
+        if index_find_pos == len(fragment_indices):
+            return index + chars_lost[index_find_pos - 1]
+
+        # if index found is before first addition
+        if index_find_pos == 0 and fragment_indices[index_find_pos] > index:
+            return index
+
+        if fragment_indices[index_find_pos] == index:
+            return index + chars_lost[index_find_pos]
+
+        if fragment_indices[index_find_pos] > index:
+            return index + chars_lost[index_find_pos - 1]
+
+        print("Index not found! WTF.")
+        return -1
+
+    def set_octavo_indices(self, octavo_indexmap):
+        self.octavo_start_index = (
+            self.find_octavo_index(self.find_start_index, octavo_indexmap))
+        self.octavo_end_index = (
+            self.find_octavo_index(self.find_end_index, octavo_indexmap))
 
     # REFRACTOR! this is a mess
     def add_context(self, window_size=2000,

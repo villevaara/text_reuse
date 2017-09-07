@@ -36,15 +36,15 @@ class OctavoEccoClusterClient(OctavoAPIClient):
             "/eccocluster" +
             "/search?query=")
 
-    def get_cluster_data_for_document_id(self,
-                                         document_id,
-                                         fields=["documentID",
-                                                 "title",
-                                                 "clusterID",
-                                                 "startIndex",
-                                                 "endIndex",
-                                                 "avgLength",
-                                                 "text"]):
+    def get_cluster_data_for_document_id_url(self,
+                                             document_id,
+                                             fields=["documentID",
+                                                     "title",
+                                                     "clusterID",
+                                                     "startIndex",
+                                                     "endIndex",
+                                                     "avgLength",
+                                                     "text"]):
 
         fields_part = self.get_fields_request_part(fields)
 
@@ -55,9 +55,24 @@ class OctavoEccoClusterClient(OctavoAPIClient):
             fields_part +
             self.limit_timeout_part)
 
+        return api_request
+
+    def call_api_with_get_and_forget(self, api_request):
+        get(api_request, timeout=0.01)
+
+    def get_cluster_data_for_document_id(self,
+                                         document_id,
+                                         fields=["documentID",
+                                                 "title",
+                                                 "clusterID",
+                                                 "startIndex",
+                                                 "endIndex",
+                                                 "avgLength",
+                                                 "text"]):
+        api_request = self.get_cluster_data_for_document_id_url(
+            document_id, fields)
         self.announce_query(api_request)
         response = get(api_request)
-
         data = response.json().get('results').get('docs')
         return data
 
