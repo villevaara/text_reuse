@@ -42,7 +42,7 @@ class TextReuseFragment(object):
         self.preceding_header_index = -1
         self.fragment_indices = None
         self.document_collection = None
-        self.encoding_type = None
+        self.encoding = None
         self.octavo_start_index = None
         self.octavo_end_index = None
 
@@ -72,16 +72,14 @@ class TextReuseFragment(object):
 
     def __context_search(self, search_text, document_text, ascii_search):
         if ascii_search:
-            document_text = re.sub(r'[^\x00-\x7f]',
-                                   r'', document_text)
+            document_text = re.sub(r'[^\x00-\x7f]', r'', document_text)
         document_text_stripped = ' '.join(document_text.split())
         fragment_start_index = document_text_stripped.find(search_text)
         return [fragment_start_index, document_text_stripped]
 
     def __context_search2(self, search_text, document_text, ascii_search):
         if ascii_search:
-            document_text = re.sub(r'[^\x00-\x7f]',
-                                   r'', document_text)
+            document_text = re.sub(r'[^\x00-\x7f]', r'', document_text)
         document_text_stripped = ' '.join(document_text.split())
         fragment_start_index = document_text_stripped.find(search_text)
         if fragment_start_index != -1:
@@ -188,7 +186,7 @@ class TextReuseFragment(object):
                                                           ascii_search)
 
             if fragment_start_index != -1:
-                self.find_start_index = fragment_start_index
+                # self.find_start_index = fragment_start_index
                 if ascii_search:
                     self.encoding = "ascii"
                 else:
