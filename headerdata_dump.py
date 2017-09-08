@@ -16,6 +16,10 @@ from lib.fragmentlists import (
 
 from lib.utils_common import create_dir_if_not_exists
 
+# usage:
+# $ python headerdata_dump.py --inputfile ecco1_ids1.csv
+
+
 def add_csv_ids_to_set(csvfile_location, destination_set):
     with open(csvfile_location, 'r') as csvfile:
         csvreader = csv.reader(csvfile)
