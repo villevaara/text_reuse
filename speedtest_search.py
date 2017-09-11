@@ -23,17 +23,18 @@ ecco_api_client = OctavoEccoClient()
 cluster_api_client = OctavoEccoClusterClient(timeout=600)
 
 fields_ecco = ["documentID", "content"]
-field_eccocluster = ["documentID", "clusterID"]
+field_eccocluster = ["documentID", "clusterID", "text",
+                     "startIndex", "endIndex"]
 
 # docid = "1042800201"  # 220
 # docid = "1529201400"  # 49
 
 start = timer()
-# docid = "1441900300"
-docid = "0459801102"
+docid = "1668602000"
+# docid = "0459801102"
 docid_clusterdata = (
     cluster_api_client.get_cluster_data_for_document_id(
-        docid))
+        docid, field_eccocluster))
 end = timer()
 print("Clusterdata took " + str(round((end - start), 2)) + "s")
 
@@ -65,3 +66,12 @@ end = timer()
 print("Fragments took " + str(round((end - start), 2)) + "s")
 
 # compare_octavo_text_for_fragment(docid_fragments[0], docid_fulltext_text)
+
+i = 0
+for docid in docid_fragments:
+    # print("from_api:  " + str(docid.start_index))
+    # print("from_find: " + str(docid.find_start_index))
+    if (docid.cluster_id) == 8727062:
+        print(str(i))
+    i += 1
+

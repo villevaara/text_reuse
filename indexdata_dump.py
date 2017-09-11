@@ -83,6 +83,36 @@ def get_start_params(argv):
     return inputfile
 
 
+def write_index_anomaly(bug_report_dict):
+    docid = bug_report_dict.get('document_id')
+    cluid = bug_report_dict.get('cluster_id')
+    find_s = bug_report_dict.get('find_start_index')
+    find_e = bug_report_dict.get('find_end_index')
+    orig_s = bug_report_dict.get('orig_start_index')
+    orig_e = bug_report_dict.get('orig_end_index')
+    octa_s = bug_report_dict.get('octavo_start_index')
+    octa_e = bug_report_dict.get('octavo_end_index')
+    encoding = bug_report_dict.get('encoding')
+    text = bug_report_dict.get('text')
+    report_fname = ("indexreport_doc" + str(docid) + "-clu" + str(cluid) +
+                    ".txt")
+    with open(report_fname, 'w') as txtfile:
+        txtfile.writelines([
+            "docid : " + str(docid) + "\n",
+            "cluid : " + str(cluid) + "\n",
+            "encod : " + encoding + "\n",
+            "find_s: " + str(find_s) + "\n",
+            "orig_s: " + str(orig_s) + "\n",
+            "find_e: " + str(find_e) + "\n",
+            "orig_e: " + str(orig_e) + "\n",
+            "octa_s: " + str(octa_s) + "\n",
+            "octa_e: " + str(octa_e) + "\n",
+            "s_diff: " + str(find_s - orig_s) + "\n",
+            "e_diff: " + str(find_e - orig_e) + "\n\n",
+            text]
+            )
+
+
 inputfile = get_start_params(sys.argv[1:])
 outputprefix = inputfile[:-4]
 outputpath = 'output/octavo_indices/' + outputprefix + '/'
@@ -92,7 +122,8 @@ ecco_api_client = OctavoEccoClient()
 cluster_api_client = OctavoEccoClusterClient(timeout=600)
 
 fields_ecco = ["documentID", "content"]
-field_eccocluster = ["documentID", "clusterID"]
+field_eccocluster = ["documentID", "clusterID", "text",
+                     "startIndex", "endIndex"]
 
 ids_to_process = set()
 
@@ -109,6 +140,7 @@ processed_ids = read_processed_ids_from_results_csv(summary_csv)
 
 # start with no docid preloaded
 # docid_preloaded = ""
+
 
 for docid in ids_to_process:
 
@@ -149,9 +181,7 @@ for docid in ids_to_process:
         try:
             docid_clusterdata = (
                 cluster_api_client.get_cluster_data_for_document_id(
-                    docid_to_process, fields=["documentID",
-                                              "clusterID",
-                                              "text"]))
+                    docid_to_process, fields=field_eccocluster))
         except ValueError:
             print("Request probably timed out or something." +
                   " Retrying in 5 secs. Retries: " + str(retries) + "/20")
@@ -198,7 +228,14 @@ for docid in ids_to_process:
         fragment_data = {'cluster_id': fragment.cluster_id,
                          'document_id': fragment.ecco_id,
                          'octavo_start_index': fragment.octavo_start_index,
-                         'octavo_end_index': fragment.octavo_end_index}
+                         'octavo_end_index': fragment.octavo_end_index,
+                         'orig_start_index': fragment.start_index,
+                         'orig_end_index': fragment.end_index,
+                         'find_start_index': fragment.find_start_index,
+                         'find_end_index': fragment.find_end_index,
+                         'encoding': fragment.encoding,
+                         'encoding_mixup': fragment.encoding_mixup,
+                         'fragtext': fragment.text}
         fragment_results.append(fragment_data)
 
     # write results into csv file. first 4 digits docid separate files.
@@ -216,6 +253,28 @@ for docid in ids_to_process:
                                 result.get('cluster_id'),
                                 result.get('octavo_start_index'),
                                 result.get('octavo_end_index')])
+            # if (result.get('orig_start_index') -
+            #     result.get('find_start_index')) != (
+            #     result.get('orig_end_index') -
+            #         result.get('find_end_index')):
+            # if (result.get('orig_start_index') -
+            #     result.get('find_start_index') != 0) or (
+            #     result.get('orig_end_index') -
+            #         result.get('find_end_index') != 0):
+            if (result.get('encoding_mixup') is True):
+                print("encoding mixup!")
+                bug_report_dict = (
+                    {'document_id': result.get('document_id'),
+                     'cluster_id': result.get('cluster_id'),
+                     'find_start_index': result.get('find_start_index'),
+                     'find_end_index': result.get('find_end_index'),
+                     'orig_start_index': result.get('orig_start_index'),
+                     'orig_end_index': result.get('orig_end_index'),
+                     'octavo_start_index': result.get('octavo_start_index'),
+                     'octavo_end_index': result.get('octavo_end_index'),
+                     'encoding': result.get('encoding'),
+                     'text': result.get('fragtext')})
+                write_index_anomaly(bug_report_dict)
         print("docid: " + docid_to_process + ' results written to ' +
               results_csv)
 

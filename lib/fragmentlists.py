@@ -19,8 +19,8 @@ def get_fragmentlist(cluster_data, document_text_data,
         fragment = TextReuseFragment(ecco_id=item.get('documentID'),
                                      cluster_id=item.get('clusterID'),
                                      text=item.get('text'),
-                                     start_index=None,
-                                     end_index=None)
+                                     start_index=item.get('startIndex'),
+                                     end_index=item.get('endIndex'))
         fragment.set_fragment_encoding(document_text_data=document_text_data)
         if fragment.encoding == "ascii":
             fragment.set_octavo_indices(docid_indexmap_ascii)
