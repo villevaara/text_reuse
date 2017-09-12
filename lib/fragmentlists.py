@@ -1,16 +1,36 @@
 from lib.tr_fragment import TextReuseFragment
+import re
+# import sys
+
+
+def test_fragment_text(fragment, document_text):
+    fragment_text = fragment.text
+    fragment_text = fragment_text.strip()
+    octavo_text = document_text[fragment.octavo_start_index:
+                                fragment.octavo_end_index]
+    if fragment.is_ascii:
+        octavo_text = re.sub(r'[^\x00-\x7f]', r'', octavo_text)
+    octavo_text = ' '.join(octavo_text.split())
+    if fragment_text == octavo_text:
+        return True
+    else:
+        # print(fragment_text)
+        # print("\n")
+        # print(octavo_text)
+        return False
 
 
 def get_fragmentlist(cluster_data, document_text_data,
                      docid_indexmap_ascii,
-                     docid_indexmap_unicode):
+                     docid_indexmap_unicode,
+                     docid_is_ascii):
     print("> Getting fragment list ...")
     cluster_data_length = len(cluster_data) - 1
     fragment_list = []
     i = 0
     print("items in list: " + str(cluster_data_length))
     for item in cluster_data:
-        if i % 20 == 0:
+        if i % 50 == 0:
             print("Processing item: " + str(i) +
                   " / " + str(cluster_data_length))
             print("documentID: " + item.get('documentID'))
@@ -21,12 +41,44 @@ def get_fragmentlist(cluster_data, document_text_data,
                                      text=item.get('text'),
                                      start_index=item.get('startIndex'),
                                      end_index=item.get('endIndex'))
-        fragment.set_fragment_encoding(document_text_data=document_text_data)
-        if fragment.encoding == "ascii":
-            fragment.set_octavo_indices(docid_indexmap_ascii)
+
+        if docid_is_ascii is None:
+            use_orig = False
         else:
-            fragment.set_octavo_indices(docid_indexmap_unicode)
+            use_orig = True
+
+        text_validates = False
+
+        # set octavo indices
+        while not text_validates:
+            if use_orig:
+                fragment.is_ascii = docid_is_ascii
+            else:
+                # print("     >> looking for fragment with old method!")
+                fragment.set_fragment_encoding(
+                    document_text_data=document_text_data)
+
+            if fragment.is_ascii is None:
+                print("     >> Octavo indices not found for fragment" +
+                      " clu: " + fragment.cluster_id +
+                      " doc: " + fragment.ecco_id +
+                      "\n      >> moving on with life.")
+                break
+            if fragment.is_ascii:
+                fragment.set_octavo_indices(docid_indexmap_ascii,
+                                            orig_index=use_orig)
+            else:
+                fragment.set_octavo_indices(docid_indexmap_unicode,
+                                            orig_index=use_orig)
+
+            if test_fragment_text(fragment, document_text_data.get('text')):
+                text_validates = True
+            else:
+                # print(" !!ERRORERROR!! fragment text does not match!")
+                use_orig = False
+
         fragment_list.append(fragment)
+
     print("  >> Done!")
     return fragment_list
 

@@ -28,49 +28,49 @@ from lib.output_csv import (
     )
 
 
-def get_fragmentlist(cluster_data, get_octavo_indices=False,
-                     window_size=0, context_sole_id=""):
-    print("> Getting fragment list ...")
+# def get_fragmentlist(cluster_data, get_octavo_indices=False,
+#                      window_size=0, context_sole_id=""):
+#     print("> Getting fragment list ...")
 
-    headerdata = None
-    if context_sole_id is not "":
-        # ecco_api_client = OctavoEccoClient()
-        # document_data = ecco_api_client.get_text_for_document_id(
-        #     context_sole_id)
-        # # document_data = get_text_for_document_id_from_api(context_sole_id)
-        # document_text = document_data.get('text')
-        headerdata = get_headers_for_document_id(context_sole_id)
+#     headerdata = None
+#     if context_sole_id is not "":
+#         # ecco_api_client = OctavoEccoClient()
+#         # document_data = ecco_api_client.get_text_for_document_id(
+#         #     context_sole_id)
+#         # # document_data = get_text_for_document_id_from_api(context_sole_id)
+#         # document_text = document_data.get('text')
+#         headerdata = get_headers_for_document_id(context_sole_id)
 
-    cluster_data_length = len(cluster_data) - 1
-    fragment_list = []
-    i = 0
-    print("items in list: " + str(len(cluster_data)))
+#     cluster_data_length = len(cluster_data) - 1
+#     fragment_list = []
+#     i = 0
+#     print("items in list: " + str(len(cluster_data)))
 
-    if context_sole_id != "":
-        ecco_api_client = OctavoEccoClient()
-        document_text_data = (
-            ecco_api_client.get_text_for_document_id(context_sole_id))
+#     if context_sole_id != "":
+#         ecco_api_client = OctavoEccoClient()
+#         document_text_data = (
+#             ecco_api_client.get_text_for_document_id(context_sole_id))
 
-    for item in cluster_data:
-        print("Processing item: " + str(i) +
-              " / " + str(cluster_data_length))
-        print("itemID: " + item.get('documentID'))
-        i = i + 1
-        fragment = TextReuseFragment(ecco_id=item.get('documentID'),
-                                     cluster_id=item.get('clusterID'),
-                                     text=item.get('text'),
-                                     start_index=item.get('startIndex'),
-                                     end_index=item.get('endIndex'))
-        fragment.add_metadata(good_metadata)
-        if (context_sole_id == "") or (context_sole_id == fragment.ecco_id):
-            fragment.add_context(window_size=window_size,
-                                 force_octavo_search=True,
-                                 get_octavo_indices=get_octavo_indices,
-                                 headerdata_source=headerdata,
-                                 document_text_data=document_text_data)
-        fragment_list.append(fragment)
-    print("  >> Done!")
-    return fragment_list
+#     for item in cluster_data:
+#         print("Processing item: " + str(i) +
+#               " / " + str(cluster_data_length))
+#         print("itemID: " + item.get('documentID'))
+#         i = i + 1
+#         fragment = TextReuseFragment(ecco_id=item.get('documentID'),
+#                                      cluster_id=item.get('clusterID'),
+#                                      text=item.get('text'),
+#                                      start_index=item.get('startIndex'),
+#                                      end_index=item.get('endIndex'))
+#         fragment.add_metadata(good_metadata)
+#         if (context_sole_id == "") or (context_sole_id == fragment.ecco_id):
+#             fragment.add_context(window_size=window_size,
+#                                  force_octavo_search=True,
+#                                  get_octavo_indices=get_octavo_indices,
+#                                  headerdata_source=headerdata,
+#                                  document_text_data=document_text_data)
+#         fragment_list.append(fragment)
+#     print("  >> Done!")
+#     return fragment_list
 
 
 def get_fragments_of_document_id(fragment_list, document_id):

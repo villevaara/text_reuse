@@ -42,7 +42,7 @@ class TextReuseFragment(object):
         self.preceding_header_index = -1
         self.fragment_indices = None
         self.document_collection = None
-        self.encoding = None
+        self.is_ascii = None
         self.encoding_mixup = False
         self.octavo_start_index = None
         self.octavo_end_index = None
@@ -108,10 +108,12 @@ class TextReuseFragment(object):
                 self.find_end_index = (fragment_start_index +
                                        len(self.text))
                 if ascii_search:
-                    self.encoding = "ascii"
+                    self.is_ascii = True
+                    # self.encoding = "ascii"
                 else:
-                    self.encoding = "unicode"
-                return self.encoding
+                    self.is_ascii = False
+                    # self.encoding = "unicode"
+                return self.is_ascii
 
             elif fragment_start_index == -1 and not retried:
                 print(" > Fragment not found." +
@@ -149,11 +151,17 @@ class TextReuseFragment(object):
         print("Index not found! WTF.")
         return -1
 
-    def set_octavo_indices(self, octavo_indexmap):
+    def set_octavo_indices(self, octavo_indexmap, orig_index=True):
+        if orig_index:
+            start_i = self.start_index
+            end_i = self.end_index
+        else:
+            start_i = self.find_start_index
+            end_i = self.find_end_index
         self.octavo_start_index = (
-            self.find_octavo_index(self.find_start_index, octavo_indexmap))
+            self.find_octavo_index(start_i, octavo_indexmap))
         self.octavo_end_index = (
-            self.find_octavo_index(self.find_end_index, octavo_indexmap))
+            self.find_octavo_index(end_i, octavo_indexmap))
 
     # REFRACTOR! this is a mess
     # def add_context(self, window_size=2000,

@@ -11,6 +11,8 @@ from lib.fragmentlists import (
     get_fragmentlist,
     get_doctext_indexmap)
 
+from lib.headerdata_dump_common import read_docid_asciimap_csv
+
 
 def compare_octavo_text_for_fragment(fragment, octavo_text):
     print("Fragment text:\n")
@@ -28,9 +30,10 @@ field_eccocluster = ["documentID", "clusterID", "text",
 
 # docid = "1042800201"  # 220
 # docid = "1529201400"  # 49
+docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
 
 start = timer()
-docid = "1668602000"
+docid = "1275801800"
 # docid = "0459801102"
 docid_clusterdata = (
     cluster_api_client.get_cluster_data_for_document_id(
@@ -47,6 +50,7 @@ print("Clusterdata took " + str(round((end - start), 2)) + "s")
 
 docid_fulltext_data = ecco_api_client.get_text_for_document_id(docid)
 docid_fulltext_text = docid_fulltext_data.get('text')
+docid_ascii = docids_asciimap.get(docid)
 
 start = timer()
 docid_indexmap_ascii = get_doctext_indexmap(orig_text=docid_fulltext_text,
@@ -61,7 +65,8 @@ start = timer()
 docid_fragments = get_fragmentlist(docid_clusterdata,
                                    docid_fulltext_data,
                                    docid_indexmap_ascii,
-                                   docid_indexmap_unicode)
+                                   docid_indexmap_unicode,
+                                   docid_ascii)
 end = timer()
 print("Fragments took " + str(round((end - start), 2)) + "s")
 
@@ -74,4 +79,3 @@ for docid in docid_fragments:
     if (docid.cluster_id) == 8727062:
         print(str(i))
     i += 1
-

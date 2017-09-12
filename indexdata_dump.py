@@ -15,6 +15,7 @@ from lib.fragmentlists import (
     get_doctext_indexmap)
 
 from lib.utils_common import create_dir_if_not_exists
+from lib.headerdata_dump_common import read_docid_asciimap_csv
 
 # usage:
 # $ python indexdata_dump.py --inputfile ecco1_ids1.csv
@@ -69,7 +70,6 @@ def prepare_summary_csv(summary_csv):
 
 
 def get_start_params(argv):
-    inputfile = "set1.csv"
     try:
         opts, args = getopt.getopt(argv, "",
                                    ["inputfile="]
@@ -135,12 +135,12 @@ prepare_summary_csv(summary_csv)
 
 # get processed ids from summary.
 processed_ids = read_processed_ids_from_results_csv(summary_csv)
+docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
 
 # skip already processed ids
 
 # start with no docid preloaded
 # docid_preloaded = ""
-
 
 for docid in ids_to_process:
 
@@ -187,7 +187,7 @@ for docid in ids_to_process:
                   " Retrying in 5 secs. Retries: " + str(retries) + "/20")
             sleep(5)
             retries += 1
-            if retries == 11:
+            if retries == 21:
                 print("That's too many!")
                 sys.exit("Aargh! Errors!")
             continue
@@ -196,12 +196,14 @@ for docid in ids_to_process:
             break
 
     # we should have the good response now. Yay
-    # docid_fulltext = ecco_api_client.get_text_for_document_id(docid_to_process)
-    # docid_fragments = get_fragmentlist(docid_clusterdata, docid_fulltext)
-    # docid_fragments_amount = len(docid_fragments)
-
     docid_fulltext_data = ecco_api_client.get_text_for_document_id(docid)
     docid_fulltext_text = docid_fulltext_data.get('text')
+
+    # Exactly 1 id is missing from the clusterdata. Go figure.
+    if docid == "1563300700":
+        docid_ascii = None
+    else:
+        docid_ascii = docids_asciimap.get(docid)
 
     # start = timer()
     docid_indexmap_ascii = get_doctext_indexmap(
@@ -215,7 +217,8 @@ for docid in ids_to_process:
     docid_fragments = get_fragmentlist(docid_clusterdata,
                                        docid_fulltext_data,
                                        docid_indexmap_ascii,
-                                       docid_indexmap_unicode)
+                                       docid_indexmap_unicode,
+                                       docid_is_ascii=docid_ascii)
     end = timer()
     time_taken = round((end - start), 2)
     print("Fragments took " + str(time_taken) + "s")
@@ -233,7 +236,7 @@ for docid in ids_to_process:
                          'orig_end_index': fragment.end_index,
                          'find_start_index': fragment.find_start_index,
                          'find_end_index': fragment.find_end_index,
-                         'encoding': fragment.encoding,
+                         'encoding': fragment.is_ascii,
                          'encoding_mixup': fragment.encoding_mixup,
                          'fragtext': fragment.text}
         fragment_results.append(fragment_data)
@@ -261,20 +264,20 @@ for docid in ids_to_process:
             #     result.get('find_start_index') != 0) or (
             #     result.get('orig_end_index') -
             #         result.get('find_end_index') != 0):
-            if (result.get('encoding_mixup') is True):
-                print("encoding mixup!")
-                bug_report_dict = (
-                    {'document_id': result.get('document_id'),
-                     'cluster_id': result.get('cluster_id'),
-                     'find_start_index': result.get('find_start_index'),
-                     'find_end_index': result.get('find_end_index'),
-                     'orig_start_index': result.get('orig_start_index'),
-                     'orig_end_index': result.get('orig_end_index'),
-                     'octavo_start_index': result.get('octavo_start_index'),
-                     'octavo_end_index': result.get('octavo_end_index'),
-                     'encoding': result.get('encoding'),
-                     'text': result.get('fragtext')})
-                write_index_anomaly(bug_report_dict)
+            # if (result.get('encoding_mixup') is True):
+            #     print("encoding mixup!")
+            #     bug_report_dict = (
+            #         {'document_id': result.get('document_id'),
+            #          'cluster_id': result.get('cluster_id'),
+            #          'find_start_index': result.get('find_start_index'),
+            #          'find_end_index': result.get('find_end_index'),
+            #          'orig_start_index': result.get('orig_start_index'),
+            #          'orig_end_index': result.get('orig_end_index'),
+            #          'octavo_start_index': result.get('octavo_start_index'),
+            #          'octavo_end_index': result.get('octavo_end_index'),
+            #          'encoding': result.get('encoding'),
+            #          'text': result.get('fragtext')})
+            #     write_index_anomaly(bug_report_dict)
         print("docid: " + docid_to_process + ' results written to ' +
               results_csv)
 
