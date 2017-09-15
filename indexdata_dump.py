@@ -55,6 +55,7 @@ def write_results_csv_header(results_csv):
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(['document_id',
                                 'cluster_id',
+                                'api_start_index',
                                 'octavo_start_index',
                                 'octavo_end_index'])
 
@@ -75,42 +76,13 @@ def get_start_params(argv):
                                    ["inputfile="]
                                    )
     except getopt.GetoptError:
+
         sys.exit(2)
     for opt, arg in opts:
         if opt == "--inputfile":
             inputfile = arg
     print("inputfile: " + inputfile)
     return inputfile
-
-
-def write_index_anomaly(bug_report_dict):
-    docid = bug_report_dict.get('document_id')
-    cluid = bug_report_dict.get('cluster_id')
-    find_s = bug_report_dict.get('find_start_index')
-    find_e = bug_report_dict.get('find_end_index')
-    orig_s = bug_report_dict.get('orig_start_index')
-    orig_e = bug_report_dict.get('orig_end_index')
-    octa_s = bug_report_dict.get('octavo_start_index')
-    octa_e = bug_report_dict.get('octavo_end_index')
-    encoding = bug_report_dict.get('encoding')
-    text = bug_report_dict.get('text')
-    report_fname = ("indexreport_doc" + str(docid) + "-clu" + str(cluid) +
-                    ".txt")
-    with open(report_fname, 'w') as txtfile:
-        txtfile.writelines([
-            "docid : " + str(docid) + "\n",
-            "cluid : " + str(cluid) + "\n",
-            "encod : " + encoding + "\n",
-            "find_s: " + str(find_s) + "\n",
-            "orig_s: " + str(orig_s) + "\n",
-            "find_e: " + str(find_e) + "\n",
-            "orig_e: " + str(orig_e) + "\n",
-            "octa_s: " + str(octa_s) + "\n",
-            "octa_e: " + str(octa_e) + "\n",
-            "s_diff: " + str(find_s - orig_s) + "\n",
-            "e_diff: " + str(find_e - orig_e) + "\n\n",
-            text]
-            )
 
 
 inputfile = get_start_params(sys.argv[1:])
@@ -128,7 +100,6 @@ field_eccocluster = ["documentID", "clusterID", "text",
 ids_to_process = set()
 
 add_csv_ids_to_set('data/eccoids/' + inputfile, ids_to_process)
-# add_csv_ids_to_set('data/ecco2_ids.csv', ids_to_process)
 
 summary_csv = outputpath + 'summary.csv'
 prepare_summary_csv(summary_csv)
@@ -139,57 +110,30 @@ docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
 
 # skip already processed ids
 
-# start with no docid preloaded
-# docid_preloaded = ""
-
 for docid in ids_to_process:
 
-    # preload next docid into api cache
-    # TODO: package this into function in api_client
-
-    # # forget about the preloading stuff for now
-    # print("Preloading docid: " + docid)
-    # docid_to_preload = docid
-    # preload_request = cluster_api_client.get_cluster_data_for_document_id_url(
-    #     docid_to_preload)
-    # try:
-    #     cluster_api_client.call_api_with_get_and_forget(preload_request)
-    # except Timeout:
-    #     print("Preloading into API cache...")
-    # else:
-    #     print("That was fast!")
-
-    # # if there is no docid preloaded, so the loop iteration is first, wait.
-    # if docid_preloaded != "":
-    #     print("Processing preloaded docid...")
-    #     docid_to_process = docid_preloaded
-    # else:
-    #     # wait 5 minutes, then mark docid as preloaded
-    #     print("Preloading first request! 3 mins...")
-    #     sleep(180)
-    #     docid_preloaded = docid
-    #     continue
     docid_to_process = docid
 
     if docid_to_process in processed_ids:
-        print("DocID already processed!?")
+        print("  !> docid " + docid_to_process + " already processed." +
+              " Skipping.")
         continue
 
     # try catch here with retry (x10? 20 sec delay)
     retries = 0
-    while retries < 21:
+    while retries < 41:
         try:
             docid_clusterdata = (
                 cluster_api_client.get_cluster_data_for_document_id(
                     docid_to_process, fields=field_eccocluster))
         except ValueError:
-            print("Request probably timed out or something." +
-                  " Retrying in 5 secs. Retries: " + str(retries) + "/20")
-            sleep(5)
+            print("  !> Request probably timed out or something." +
+                  " Retrying in 8 secs. Retries: " + str(retries) + "/40")
+            sleep(8)
             retries += 1
-            if retries == 21:
-                print("That's too many!")
-                sys.exit("Aargh! Errors!")
+            if retries == 41:
+                print("  !!> That's too many!")
+                sys.exit("  !!> Aargh! Errors!")
             continue
         else:
             print("Got cluster data...")
@@ -205,13 +149,10 @@ for docid in ids_to_process:
     else:
         docid_ascii = docids_asciimap.get(docid)
 
-    # start = timer()
     docid_indexmap_ascii = get_doctext_indexmap(
         orig_text=docid_fulltext_text, method_ascii=True)
     docid_indexmap_unicode = get_doctext_indexmap(
         orig_text=docid_fulltext_text, method_ascii=False)
-    # end = timer()
-    # print("Indexmaps took " + str(round((end - start), 2)) + "s")
 
     start = timer()
     docid_fragments = get_fragmentlist(docid_clusterdata,
@@ -232,13 +173,13 @@ for docid in ids_to_process:
                          'document_id': fragment.ecco_id,
                          'octavo_start_index': fragment.octavo_start_index,
                          'octavo_end_index': fragment.octavo_end_index,
-                         'orig_start_index': fragment.start_index,
-                         'orig_end_index': fragment.end_index,
-                         'find_start_index': fragment.find_start_index,
-                         'find_end_index': fragment.find_end_index,
-                         'encoding': fragment.is_ascii,
-                         'encoding_mixup': fragment.encoding_mixup,
-                         'fragtext': fragment.text}
+                         'orig_start_index': fragment.start_index
+                         # 'orig_end_index': fragment.end_index,
+                         # 'find_start_index': fragment.find_start_index,
+                         # 'find_end_index': fragment.find_end_index,
+                         # 'encoding': fragment.is_ascii,
+                         # 'fragtext': fragment.text
+                         }
         fragment_results.append(fragment_data)
 
     # write results into csv file. first 4 digits docid separate files.
@@ -254,37 +195,15 @@ for docid in ids_to_process:
         for result in fragment_results:
             csvwriter.writerow([result.get('document_id'),
                                 result.get('cluster_id'),
+                                result.get('orig_start_index'),
                                 result.get('octavo_start_index'),
                                 result.get('octavo_end_index')])
-            # if (result.get('orig_start_index') -
-            #     result.get('find_start_index')) != (
-            #     result.get('orig_end_index') -
-            #         result.get('find_end_index')):
-            # if (result.get('orig_start_index') -
-            #     result.get('find_start_index') != 0) or (
-            #     result.get('orig_end_index') -
-            #         result.get('find_end_index') != 0):
-            # if (result.get('encoding_mixup') is True):
-            #     print("encoding mixup!")
-            #     bug_report_dict = (
-            #         {'document_id': result.get('document_id'),
-            #          'cluster_id': result.get('cluster_id'),
-            #          'find_start_index': result.get('find_start_index'),
-            #          'find_end_index': result.get('find_end_index'),
-            #          'orig_start_index': result.get('orig_start_index'),
-            #          'orig_end_index': result.get('orig_end_index'),
-            #          'octavo_start_index': result.get('octavo_start_index'),
-            #          'octavo_end_index': result.get('octavo_end_index'),
-            #          'encoding': result.get('encoding'),
-            #          'text': result.get('fragtext')})
-            #     write_index_anomaly(bug_report_dict)
         print("docid: " + docid_to_process + ' results written to ' +
               results_csv)
 
     write_summary_row(docid_to_process, docid_fragments_amount,
                       time_taken, summary_csv)
 
-    # preloading should have finished while processing previous doc.
     processed_ids.add(docid_to_process)
 
-    # docid_preloaded = docid_to_preload
+print("\n\n  >>>> All ids in set done.\n")

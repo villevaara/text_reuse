@@ -33,7 +33,7 @@ field_eccocluster = ["documentID", "clusterID", "text",
 docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
 
 start = timer()
-docid = "1275801800"
+docid = "0680802000"
 # docid = "0459801102"
 docid_clusterdata = (
     cluster_api_client.get_cluster_data_for_document_id(
@@ -76,6 +76,7 @@ i = 0
 for docid in docid_fragments:
     # print("from_api:  " + str(docid.start_index))
     # print("from_find: " + str(docid.find_start_index))
-    if (docid.cluster_id) == 8727062:
+    if (docid.cluster_id) == 597747:
         print(str(i))
     i += 1
+

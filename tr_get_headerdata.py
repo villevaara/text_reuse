@@ -27,50 +27,52 @@ from lib.output_csv import (
     write_document_text_with_coverage_highlight,
     )
 
+from lib.fragmentlists import FragmentList
 
-# def get_fragmentlist(cluster_data, get_octavo_indices=False,
-#                      window_size=0, context_sole_id=""):
-#     print("> Getting fragment list ...")
 
-#     headerdata = None
-#     if context_sole_id is not "":
-#         # ecco_api_client = OctavoEccoClient()
-#         # document_data = ecco_api_client.get_text_for_document_id(
-#         #     context_sole_id)
-#         # # document_data = get_text_for_document_id_from_api(context_sole_id)
-#         # document_text = document_data.get('text')
-#         headerdata = get_headers_for_document_id(context_sole_id)
+def get_multi_id_fragmentlist(cluster_data, get_octavo_indices=False,
+                              window_size=0, context_sole_id=""):
+    print("> Getting fragment list ...")
 
-#     cluster_data_length = len(cluster_data) - 1
-#     fragment_list = []
-#     i = 0
-#     print("items in list: " + str(len(cluster_data)))
+    headerdata = None
+    if context_sole_id is not "":
+        # ecco_api_client = OctavoEccoClient()
+        # document_data = ecco_api_client.get_text_for_document_id(
+        #     context_sole_id)
+        # # document_data = get_text_for_document_id_from_api(context_sole_id)
+        # document_text = document_data.get('text')
+        headerdata = get_headers_for_document_id(context_sole_id)
 
-#     if context_sole_id != "":
-#         ecco_api_client = OctavoEccoClient()
-#         document_text_data = (
-#             ecco_api_client.get_text_for_document_id(context_sole_id))
+    cluster_data_length = len(cluster_data) - 1
+    fragment_list = []
+    i = 0
+    print("items in list: " + str(len(cluster_data)))
 
-#     for item in cluster_data:
-#         print("Processing item: " + str(i) +
-#               " / " + str(cluster_data_length))
-#         print("itemID: " + item.get('documentID'))
-#         i = i + 1
-#         fragment = TextReuseFragment(ecco_id=item.get('documentID'),
-#                                      cluster_id=item.get('clusterID'),
-#                                      text=item.get('text'),
-#                                      start_index=item.get('startIndex'),
-#                                      end_index=item.get('endIndex'))
-#         fragment.add_metadata(good_metadata)
-#         if (context_sole_id == "") or (context_sole_id == fragment.ecco_id):
-#             fragment.add_context(window_size=window_size,
-#                                  force_octavo_search=True,
-#                                  get_octavo_indices=get_octavo_indices,
-#                                  headerdata_source=headerdata,
-#                                  document_text_data=document_text_data)
-#         fragment_list.append(fragment)
-#     print("  >> Done!")
-#     return fragment_list
+    if context_sole_id != "":
+        ecco_api_client = OctavoEccoClient()
+        document_text_data = (
+            ecco_api_client.get_text_for_document_id(context_sole_id))
+
+    for item in cluster_data:
+        print("Processing item: " + str(i) +
+              " / " + str(cluster_data_length))
+        print("itemID: " + item.get('documentID'))
+        i = i + 1
+        fragment = TextReuseFragment(ecco_id=item.get('documentID'),
+                                     cluster_id=item.get('clusterID'),
+                                     text=item.get('text'),
+                                     start_index=item.get('startIndex'),
+                                     end_index=item.get('endIndex'))
+        fragment.add_metadata(good_metadata)
+        if (context_sole_id == "") or (context_sole_id == fragment.ecco_id):
+            fragment.add_context(window_size=window_size,
+                                 force_octavo_search=True,
+                                 get_octavo_indices=get_octavo_indices,
+                                 headerdata_source=headerdata,
+                                 document_text_data=document_text_data)
+        fragment_list.append(fragment)
+    print("  >> Done!")
+    return fragment_list
 
 
 def get_fragments_of_document_id(fragment_list, document_id):
@@ -91,16 +93,7 @@ def get_fragments_of_cluster_id(fragment_list, cluster_id):
 
 def get_cluster_list(fragment_list, add_cluster_groups=True):
     print("> Getting cluster list ...")
-    cluster_ids = set()
-    fragment_list_length = len(fragment_list)
-    i = 0
-    for fragment in fragment_list:
-        i = i + 1
-        if i % 100 == 0:
-            print("  >> Finding cluster ids: " +
-                  str(i) + " / " + str(fragment_list_length))
-        cluster_ids.add(fragment.cluster_id)
-
+    cluster_ids = fragment_list.get_unique_cluster_ids()
     cluster_ids_length = len(cluster_ids)
     cluster_list = []
 
@@ -116,14 +109,14 @@ def get_cluster_list(fragment_list, add_cluster_groups=True):
                   " -- Took: " + str(round((end - start), 1)) + "s")
             start = time.time()
 
-        fragments = get_fragments_of_cluster_id(fragment_list, cluster_id)
-        # remove found elements to speed up things
-        # shaves off about 1/3 of the time
-        for fragment in fragments:
-            fragment_list.remove(fragment)
-
+        fragments = fragment_list.get_fragments_of_cluster_id(cluster_id)
+        # # remove found elements to speed up things
+        # # shaves off about 1/3 of the time
+        # for fragment in fragments:
+        #     fragment_list.remove(fragment)
         cluster = TextReuseCluster(document_id, cluster_id, fragments)
-        cluster.add_cluster_groups()
+        if add_cluster_groups:
+            cluster.add_cluster_groups()
         cluster_list.append(cluster)
 
     print("  >> Done!")
@@ -244,26 +237,12 @@ def get_start_params(argv):
            testing_amount)
 
 
-def get_cluster_coverage_data(document_id_to_cover, cluster_list,
+def get_cluster_coverage_data(document_id_to_cover,
+                              cluster_list,
                               ecco_api_client):
     document_text = ecco_api_client.get_text_for_document_id(
         document_id_to_cover).get('text')
-    # document_text = get_text_for_document_id_from_api(
-    #     document_id_to_cover).get('text')
     document_length = len(document_text)
-
-    # find cluster text location in original text!
-    # for i in range(0, document_length):
-    #     pass
-    # continue from here!
-    # add proper octavo coverage data
-    # add actual text, previous headers
-
-    # if end_index > doc_length expand doc
-    # THIS SHOULD NEVER HAPPEN
-    # for cluster in cluster_list:
-    #     if cluster.group_end_index > document_length:
-    #         document_length = cluster.group_end_index
 
     cluster_coverage = [0] * document_length
     # cluster_text = [""] * document_length
@@ -280,7 +259,8 @@ def get_cluster_coverage_data(document_id_to_cover, cluster_list,
     return cluster_coverage
 
 
-def get_document_text_with_coverage_highlight(document_id, coverage_data,
+def get_document_text_with_coverage_highlight(document_id,
+                                              coverage_data,
                                               ecco_api_client):
     document_text = ecco_api_client.get_text_for_document_id(
         document_id).get('text')
@@ -294,6 +274,7 @@ def get_document_text_with_coverage_highlight(document_id, coverage_data,
 
     document_text_results = "".join(document_text_list)
     return document_text_results
+
 
 # get fragments with:
 # not hume
@@ -345,10 +326,13 @@ cluster_api_client = OctavoEccoClusterClient(limit=testing_amount)
 cluster_data = cluster_api_client.get_wide_cluster_data_for_document_id(
     document_id)
 
-fragment_list = get_fragmentlist(cluster_data,
-                                 get_octavo_indices=True,
-                                 window_size=0,
-                                 context_sole_id=document_id)
+fragment_list = FragmentList(cluster_data, document_id)
+fragment_list.add_metadata()
+
+# fragment_list = get_multi_id_fragmentlist(cluster_data,
+#                                           get_octavo_indices=True,
+#                                           window_size=0,
+#                                           context_sole_id=document_id)
 
 cluster_list = get_cluster_list(fragment_list)
 

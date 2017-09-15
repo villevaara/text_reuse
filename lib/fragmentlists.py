@@ -1,6 +1,8 @@
-from lib.tr_fragment import TextReuseFragment
 import re
-# import sys
+import sys
+
+from lib.tr_fragment import TextReuseFragment
+from lib.text_reuse_common import load_good_metadata
 
 
 def test_fragment_text(fragment, document_text):
@@ -20,6 +22,13 @@ def test_fragment_text(fragment, document_text):
         return False
 
 
+def get_document_text_splitjoined(document_text, ascii_search):
+    if ascii_search:
+        document_text = re.sub(r'[^\x00-\x7f]', r'', document_text)
+    document_text_stripped = ' '.join(document_text.split())
+    return document_text_stripped
+
+
 def get_fragmentlist(cluster_data, document_text_data,
                      docid_indexmap_ascii,
                      docid_indexmap_unicode,
@@ -27,8 +36,12 @@ def get_fragmentlist(cluster_data, document_text_data,
     print("> Getting fragment list ...")
     cluster_data_length = len(cluster_data) - 1
     fragment_list = []
+    doctext_splitjoined_unicode = None
+    doctext_splitjoined_ascii = None
+
     i = 0
     print("items in list: " + str(cluster_data_length))
+
     for item in cluster_data:
         if i % 50 == 0:
             print("Processing item: " + str(i) +
@@ -54,20 +67,44 @@ def get_fragmentlist(cluster_data, document_text_data,
             if use_orig:
                 fragment.is_ascii = docid_is_ascii
             else:
-                # print("     >> looking for fragment with old method!")
+                # only do splitjoin once.
+                if doctext_splitjoined_unicode is None:
+                    print("splitjoining doctext unicode")
+                    doctext_splitjoined_unicode = (
+                        get_document_text_splitjoined(
+                            document_text_data.get('text'),
+                            ascii_search=False))
+                if doctext_splitjoined_ascii is None:
+                    print("splitjoining doctext ascii")
+                    doctext_splitjoined_ascii = (
+                        get_document_text_splitjoined(
+                            document_text_data.get('text'),
+                            ascii_search=True))
+                document_text_data['splitjoined_unicode'] = (
+                    doctext_splitjoined_unicode)
+                document_text_data['splitjoined_ascii'] = (
+                    doctext_splitjoined_ascii)
                 fragment.set_fragment_encoding(
                     document_text_data=document_text_data)
+                # print("fragment.is_ascii: " + str(fragment.is_ascii))
 
             if fragment.is_ascii is None:
                 print("     >> Octavo indices not found for fragment" +
                       " clu: " + fragment.cluster_id +
                       " doc: " + fragment.ecco_id +
                       "\n      >> moving on with life.")
+                fragment.octavo_start_index = -1
+                fragment.octavo_end_index = -1
+                sys.exit("ERROR!")
                 break
             if fragment.is_ascii:
+                # print("indexes: ascii")
+                # print("use_orig: " + str(use_orig))
                 fragment.set_octavo_indices(docid_indexmap_ascii,
                                             orig_index=use_orig)
             else:
+                # print("indexes: unicode")
+                # print("use_orig: " + str(use_orig))
                 fragment.set_octavo_indices(docid_indexmap_unicode,
                                             orig_index=use_orig)
 
@@ -84,7 +121,12 @@ def get_fragmentlist(cluster_data, document_text_data,
 
 
 def get_doctext_indexmap(orig_text, method_ascii):
-    whitespace_chars = [' ', '\t', '\n', '\r', '\x0b', '\x0c']
+    whitespace_chars = ['\t', '\n', '\x0b', '\x0c', '\r', '\x1c', '\x1d',
+                        '\x1e', '\x1f', ' ', '\x85', '\xa0', '\u1680',
+                        '\u2000', '\u2001', '\u2002', '\u2003', '\u2004',
+                        '\u2005', '\u2006', '\u2007', '\u2008', '\u2009',
+                        '\u200a', '\u2028', '\u2029', '\u202f', '\u205f',
+                        '\u3000']
     orig_text_length = len(orig_text)
     # results to return. array (list) of fragmenttext_index,chars_lost
     fragment_indices = []
@@ -101,7 +143,6 @@ def get_doctext_indexmap(orig_text, method_ascii):
     for char_index in range(0, orig_text_length):
         if method_ascii and ord(orig_text[char_index]) > 127:
             # getting non-ascii: if ord(char) is > 127
-            # this_char_hit = True
             chars_lost += 1
             save_pending = True
             continue
@@ -113,11 +154,12 @@ def get_doctext_indexmap(orig_text, method_ascii):
             chars_lost += 1
             save_pending = True
         prev_char_wshit = this_char_wshit
-        if save_pending and not this_char_wshit:
+        # save also at last char
+        if (save_pending and not this_char_wshit) or \
+           (save_pending and char_index == orig_text_length - 1):
             fragment_index = char_index - chars_lost
             fragment_indices.append(fragment_index)
             chars_lost_list.append(chars_lost)
-            # results.append([fragment_index, chars_lost])
             save_pending = False
     if method_ascii:
         method_description = "ascii"
@@ -127,3 +169,62 @@ def get_doctext_indexmap(orig_text, method_ascii):
                'fragment_index': fragment_indices,
                'chars_lost': chars_lost_list}
     return results
+
+
+class FragmentList(object):
+
+    def __init__(self, cluster_data, seed_docid):
+
+        self.seed_docid = seed_docid  # not used ...
+        self.fragment_list = (
+            self.get_initial_fragment_list(cluster_data))
+
+    def get_initial_fragment_list(self, cluster_data):
+        print("  > Initializing fragment list ...")
+        cluster_data_length = len(cluster_data)
+        fragment_list = []
+        print("items in list: " + str(cluster_data_length))
+        for item in cluster_data:
+            fragment = TextReuseFragment(ecco_id=item.get('documentID'),
+                                         cluster_id=item.get('clusterID'),
+                                         text=item.get('text'),
+                                         start_index=item.get('startIndex'),
+                                         end_index=item.get('endIndex'))
+            fragment_list.append(fragment)
+        return fragment_list
+
+    def add_metadata(self, good_metadata=None):
+        if good_metadata is None:
+            good_metadata_jsonfile = "data/metadata/good_metadata.json"
+            good_metadata = load_good_metadata(good_metadata_jsonfile)
+        print("  > Adding metadata to fragments.")
+        for fragment in self.fragment_list:
+            fragment.add_metadata(good_metadata)
+
+    def add_headerdata(self, headerdata, document_id):
+        print("  > Adding headerdata to matching fragments.")
+        for fragment in self.fragment_list:
+            if fragment.ecco_id == document_id:
+                fragment.add_headerdata(headerdata)
+
+    def get_unique_authors(self):
+        unique_authors = set()
+        for fragment in self.fragment_list:
+            unique_authors.add(fragment.author)
+        return unique_authors
+
+    def get_unique_cluster_ids(self):
+        unique_cluster_ids = set()
+        for fragment in self.fragment_list:
+            unique_cluster_ids.add(fragment.cluster_id)
+        return unique_cluster_ids
+
+    def get_fragments_of_cluster_id(self, cluster_id):
+        filtered_list = []
+        for fragment in self.fragment_list:
+            if fragment.cluster_id == cluster_id:
+                filtered_list.append(fragment)
+        return filtered_list
+
+    def get_length(self):
+        return len(self.fragment_list)
