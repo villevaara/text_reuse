@@ -1,3 +1,5 @@
+import sys
+
 from bisect import bisect_left
 
 from lib.headerdata import (
@@ -36,9 +38,25 @@ class TextReuseFragment(object):
         self.document_length = None
         self.preceding_header = None
         self.preceding_header_index = -1
-        # self.fragment_indices = None
         self.document_collection = None
         self.is_ascii = None
+        self.seed_document_id = None
+        self.seed_header_id = None
+        self.seed_header_text = None
+        self.seed_header_start_index = None
+        self.seed_header_end_index = None
+        self.seed_uid = None
+
+    def set_seed_data(self, seed_data):
+        self.seed_document_id = seed_data.get('seed_document_id')
+        self.seed_header_id = seed_data.get('seed_header_id')
+        self.seed_header_text = seed_data.get('seed_header_text')
+        self.seed_header_start_index = seed_data.get('seed_header_start_index')
+        self.seed_header_end_index = seed_data.get('seed_header_end_index')
+        self.seed_uid = (
+            self.ecco_id + "_" +
+            str(self.seed_header_start_index) + "_" +
+            str(self.seed_header_end_index))
 
     def add_metadata(self, good_metadata):
         self.location = get_location_from_estc(
@@ -141,3 +159,18 @@ class TextReuseFragment(object):
             self.find_octavo_index(start_i, octavo_indexmap))
         self.octavo_end_index = (
             self.find_octavo_index(end_i, octavo_indexmap))
+
+    def get_context_text(self,
+                         context_position,
+                         document_text,
+                         window_size):
+        if context_position == 'before':
+            context_start = self.octavo_start_index - window_size
+            context_end = self.octavo_start_index
+        elif context_position == 'after':
+            context_start = self.octavo_end_index
+            context_end = self.octavo_end_index + window_size
+        else:
+            sys.exit("Invalid context position!")
+        context_text = document_text[context_start:context_end]
+        return context_text

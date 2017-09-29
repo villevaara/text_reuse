@@ -1,4 +1,5 @@
 import csv
+import sys
 
 
 class TextReuseCluster(object):
@@ -21,6 +22,25 @@ class TextReuseCluster(object):
         self.group_name = group_name
         self.group_id = group_id
 
+    def get_fragment_seed_uids(self):
+        fragment_seed_uids = set()
+        for fragment in self.fragment_list:
+            fragment_seed_uids.add(fragment.seed_uid)
+        return fragment_seed_uids
+
+    def filter_non_unique_seed_uids(self, used_seed_uids):
+        new_fragment_list = []
+        # print("old fragment list lenght: " + str(len(self.fragment_list)))
+        for fragment in self.fragment_list:
+            if fragment.seed_uid in used_seed_uids:
+                continue
+            else:
+                new_fragment_list.append(fragment)
+                used_seed_uids.add(fragment.seed_uid)
+        self.fragment_list = new_fragment_list
+        # print("new fragment list lenght: " + str(len(self.fragment_list)))
+        return used_seed_uids
+
     def get_first_year(self):
         first_year = self.fragment_list[0].year
         return first_year
@@ -28,6 +48,12 @@ class TextReuseCluster(object):
     def get_last_year(self):
         last_year = self.fragment_list[len(self.fragment_list) - 1].year
         return last_year
+
+    def get_years(self):
+        all_years = []
+        for fragment in self.fragment_list:
+            all_years.append(fragment.year)
+        return all_years
 
     def get_length(self):
         length = len(self.fragment_list)
@@ -61,6 +87,13 @@ class TextReuseCluster(object):
             for fragment in self.fragment_list:
                 if str(fragment.ecco_id) == str(ignore_id):
                     retlist.append(fragment)
+        return retlist
+
+    def get_fragments_with_author(self, author):
+        retlist = []
+        for fragment in self.fragment_list:
+            if fragment.author == author:
+                retlist.append(fragment)
         return retlist
 
     def filter_out_author(self, author, ignore_id=""):
@@ -118,17 +151,20 @@ class TextReuseCluster(object):
             if str(fragment.ecco_id) == self.document_id:
                 self.group_name = fragment.preceding_header
                 self.group_id = fragment.preceding_header_index
-
-                if fragment.octavo_start_index is not None:
-                    self.group_start_index = fragment.octavo_start_index
-                else:
-                    self.group_start_index = fragment.start_index
-
-                if fragment.octavo_end_index is not None:
-                    self.group_end_index = fragment.octavo_end_index
-                else:
-                    self.group_end_index = fragment.end_index
+                if fragment.octavo_start_index is None:
+                    sys.exit("No octavo start index!")
+                self.group_start_index = fragment.octavo_start_index
+                self.group_end_index = fragment.octavo_end_index
                 break
+        for fragment in self.fragment_list:
+            fragment.set_seed_data(
+                seed_data={
+                    'seed_document_id': self.document_id,
+                    'seed_header_id': self.group_id,
+                    'seed_header_text': self.group_name,
+                    'seed_header_start_index': self.group_start_index,
+                    'seed_header_end_index': self.group_end_index,
+                })
 
     def write_cluster_csv(self, outfilepath, include_header_row=True,
                           method='w'):
@@ -148,14 +184,22 @@ class TextReuseCluster(object):
                                     'preceding_header',
                                     'year',
                                     'location',
-                                    'text_before', 'text', 'text_after',
+                                    'text_before',
+                                    'text',
+                                    'text_after',
                                     'preceding_header_index',
-                                    'start_index', 'end_index',
-                                    'find_start_index', 'find_end_index',
-                                    'document_length', 'fragment_indices',
+                                    'start_index',
+                                    'end_index',
+                                    'find_start_index',
+                                    'find_end_index',
+                                    'octavo_start_index',
+                                    'octavo_end_index',
+                                    'document_length',
                                     'document_collection',
-                                    'group_name', 'group_id',
-                                    'group_start_index', 'group_end_index'])
+                                    'group_name',
+                                    'group_id',
+                                    'group_start_index',
+                                    'group_end_index'])
             for fragment in self.fragment_list:
                 csvwriter.writerow([fragment.cluster_id,
                                     fragment.ecco_id,
@@ -173,8 +217,9 @@ class TextReuseCluster(object):
                                     fragment.end_index,
                                     fragment.find_start_index,
                                     fragment.find_end_index,
+                                    fragment.octavo_start_index,
+                                    fragment.octavo_end_index,
                                     fragment.document_length,
-                                    fragment.fragment_indices,
                                     fragment.document_collection,
                                     self.group_name,
                                     self.group_id,

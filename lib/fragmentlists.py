@@ -178,6 +178,8 @@ class FragmentList(object):
         self.seed_docid = seed_docid  # not used ...
         self.fragment_list = (
             self.get_initial_fragment_list(cluster_data))
+        self.cluster_id_index = dict()
+        self.document_id_index = dict()
 
     def get_initial_fragment_list(self, cluster_data):
         print("  > Initializing fragment list ...")
@@ -192,6 +194,38 @@ class FragmentList(object):
                                          end_index=item.get('endIndex'))
             fragment_list.append(fragment)
         return fragment_list
+
+    def set_cluster_id_index(self):
+        i = 0
+        for fragment in self.fragment_list:
+            cluid = fragment.cluster_id
+            fragment_index = i
+            if cluid in self.cluster_id_index.keys():
+                self.cluster_id_index[cluid].append(fragment_index)
+            else:
+                self.cluster_id_index[cluid] = [fragment_index]
+            i += 1
+
+    def __verify_cluster_index_built(self):
+        if len(self.cluster_id_index) == 0:
+            print("Building cluster id index.")
+            self.set_cluster_id_index()
+
+    def set_document_id_index(self):
+        i = 0
+        for fragment in self.fragment_list:
+            docid = fragment.document_id
+            fragment_index = i
+            if docid in self.document_id_index.keys():
+                self.document_id_index[docid].append(fragment_index)
+            else:
+                self.document_id_index[docid] = [fragment_index]
+            i += 1
+
+    def __verify_document_index_built(self):
+        if len(self.document_id_index) == 0:
+            print("Building document id index.")
+            self.set_document_id_index()
 
     def add_metadata(self, good_metadata=None):
         if good_metadata is None:
@@ -214,16 +248,27 @@ class FragmentList(object):
         return unique_authors
 
     def get_unique_cluster_ids(self):
-        unique_cluster_ids = set()
-        for fragment in self.fragment_list:
-            unique_cluster_ids.add(fragment.cluster_id)
+        self.__verify_cluster_index_built()
+        unique_cluster_ids = self.cluster_id_index.keys()
         return unique_cluster_ids
 
     def get_fragments_of_cluster_id(self, cluster_id):
+        self.__verify_cluster_index_built()
         filtered_list = []
-        for fragment in self.fragment_list:
-            if fragment.cluster_id == cluster_id:
-                filtered_list.append(fragment)
+        for fragment_index in self.cluster_id_index[cluster_id]:
+            filtered_list.append(self.fragment_list[fragment_index])
+        return filtered_list
+
+    def get_unique_document_ids(self):
+        self.__verify_document_index_built()
+        unique_document_ids = self.document_id_index.keys()
+        return unique_document_ids
+
+    def get_fragments_of_document_id(self, document_id):
+        self.__verify_document_index_built()
+        filtered_list = []
+        for fragment_index in self.document_id_index[document_id]:
+            filtered_list.append(self.fragment_list[fragment_index])
         return filtered_list
 
     def get_length(self):

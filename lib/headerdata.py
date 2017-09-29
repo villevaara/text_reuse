@@ -7,8 +7,6 @@ from lib.octavo_api_client import (
 def get_headers_from_document_text(document_text):
     header_index_and_text = []
     header_indices = []
-    # !!!obs does this work?
-    # for match in re.finditer('\n\n#', document_text):
     for match in re.finditer('\n\n# ', document_text):
         header_indices.append(match.start())
     for index in header_indices:
@@ -16,15 +14,16 @@ def get_headers_from_document_text(document_text):
         newline_position = from_header.find('\n')
         header_text = (from_header[0:newline_position]).strip()
         # leave the \n\n# plus whitespace from the header text
-        header_index_and_text.append([index, header_text])
-    # this should really be a dict
+        header_index_and_text.append({'index': index,
+                                      'header_text': header_text})
     return header_index_and_text
 
 
-def get_headers_for_document_id(document_id):
-    ecco_api_client = OctavoEccoClient()
-    document_data = ecco_api_client.get_text_for_document_id(document_id)
-    document_text = document_data.get('text')
+def get_headers_for_document_id(document_id, document_text=None):
+    if document_text is None:
+        ecco_api_client = OctavoEccoClient()
+        document_data = ecco_api_client.get_text_for_document_id(document_id)
+        document_text = document_data.get('text')
     headerdata = get_headers_from_document_text(document_text)
     return headerdata
 
@@ -32,7 +31,8 @@ def get_headers_for_document_id(document_id):
 def get_headerdata_as_dict(headerdata):
     headerdata_dict = {}
     for headerpair in headerdata:
-        headerdata_dict[headerpair[0]] = headerpair[1]
+        headerdata_dict[headerpair.get('index')] = (
+            headerpair.get('header_text'))
     return headerdata_dict
 
 
@@ -41,8 +41,8 @@ def get_header_for_textindex(start_index, headerdata):
     header_text = "** NO HEADER FOUND **"
 
     for entry in headerdata:
-        if (entry[0] - start_index) < 0:
-            header_text = entry[1]
+        if (entry.get('index') - start_index) < 0:
+            header_text = entry.get('header_text')
         else:
             break
 
@@ -53,9 +53,9 @@ def get_header_and_index_for_textindex(start_index, headerdata):
     header_text = "** NO HEADER FOUND **"
     header_index = -1
     for entry in headerdata:
-        if (entry[0] - start_index) < 0:
-            header_index = entry[0]
-            header_text = entry[1]
+        if (entry.get('index') - start_index) < 0:
+            header_index = entry.get('index')
+            header_text = entry.get('header_text')
         else:
             break
     return {'text': header_text, 'index': header_index}

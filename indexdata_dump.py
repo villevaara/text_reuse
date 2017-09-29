@@ -126,7 +126,8 @@ for docid in ids_to_process:
             docid_clusterdata = (
                 cluster_api_client.get_cluster_data_for_document_id(
                     docid_to_process, fields=field_eccocluster))
-        except ValueError:
+        except ValueError as error:
+            print(error)
             print("  !> Request probably timed out or something." +
                   " Retrying in 8 secs. Retries: " + str(retries) + "/40")
             sleep(8)

@@ -1,0 +1,14 @@
+document_ids:
+  - "0145000201"
+  - "0145000202"
+  - "0145100103"
+  - "0145100104"
+  - "0145100105"
+  - "0145100106"
+  - "0145100107"
+  - "0145200108"
+filter_out_author: "Hume, David (1711-1776)"
+author_ignore_id: ""
+require_first_author: "orig"
+filter_out_year_below: 1754
+filter_out_year_above: -1

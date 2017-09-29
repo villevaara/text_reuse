@@ -1,10 +1,17 @@
 
 HUME, History of England
-python tr_get_headerdata.py --document_id "0145100107" --filter_out_author "Hume, David (1711-1776)" --filter_out_year_above 1759
-python tr_get_headerdata.py --document_id "0145100107" --filter_out_author "Hume, David (1711-1776)" --require_orig_author_first yes --filter_out_year_below 1761
-
+python tr_get_headerdata.py --document_id "0145100105" --filter_out_author "Hume, David (1711-1776)" --filter_out_year_above 1758
+python tr_get_headerdata.py --document_id "0145100105" --filter_out_author "Hume, David (1711-1776)" --require_orig_author_first yes --filter_out_year_below 1761
+python tr_get_headerdata.py --document_id "0145100105" --filter_out_author "Hume, David (1711-1776)" --filter_out_year_above 1758 --require_first_author "not-orig"
 
 MANDEVILLE, Fable 1714
 python tr_get_headerdata.py --document_id "1611003000" --filter_out_author "Mandeville, Bernard (1670-1733)" --filter_out_year_below 1714
 python tr_get_headerdata.py --document_id "1611003000" --filter_out_author "Mandeville, Bernard (1670-1733)" --filter_out_year_below 1714 --author_ignore_id "1611003000"
 python tr_get_headerdata.py --document_id "1611003000" --filter_out_author "Mandeville, Bernard (1670-1733)" --require_orig_author_first yes --filter_out_year_below 1714
+-------------
+^^legacy
+
+
+NEW:
+----------
+python tr_get_headerdata.py --cfg "hume2.yml"

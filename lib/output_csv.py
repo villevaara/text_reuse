@@ -1,4 +1,7 @@
 import csv
+# import markdown
+# import codecs
+import cgi
 
 from lib.utils_common import (
     get_current_date_string,
@@ -9,6 +12,27 @@ from lib.utils_common import (
 def get_outpath_prefix_with_date(outpath_prefix):
     outpath_prefix = get_current_date_string() + "-" + outpath_prefix
     return outpath_prefix
+
+
+def save_plotdata_csv(plotdata, xlabel, ylabel,
+                      outpath_prefix,
+                      include_date=False):
+    xdata = plotdata.get('x')
+    ydata = plotdata.get('y')
+    data_size = len(xdata)
+
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+
+    outdir = "output/" + outpath_prefix + "/"
+
+    create_dir_if_not_exists(outdir)
+    output_csvfile = (outdir + "plotdata_" + xlabel + "-" + ylabel + ".csv")
+    with open(output_csvfile, 'w') as coverage_file:
+        csvwriter = csv.writer(coverage_file)
+        csvwriter.writerow([xlabel, ylabel])
+        for i in range(0, data_size):
+            csvwriter.writerow([xdata[i], ydata[i]])
 
 
 def write_cluster_list_results_csv(cluster_list, outpath_prefix,
@@ -37,14 +61,22 @@ def write_cluster_list_results_csv(cluster_list, outpath_prefix,
                                 'preceding_header',
                                 'year',
                                 'location',
-                                'text_before', 'text', 'text_after',
+                                'text_before',
+                                'text',
+                                'text_after',
                                 'preceding_header_index',
-                                'start_index', 'end_index',
-                                'find_start_index', 'find_end_index',
-                                'document_length', 'fragment_indices',
+                                'start_index',
+                                'end_index',
+                                'find_start_index',
+                                'find_end_index',
+                                'octavo_start_index',
+                                'octavo_end_index',
+                                'document_length',
                                 'document_collection',
-                                'group_name', 'group_id',
-                                'group_start_index', 'group_end_index'])
+                                'group_name',
+                                'group_id',
+                                'group_start_index',
+                                'group_end_index'])
         for cluster in cluster_list:
             if cluster.group_id == group_id:
                 cluster.write_cluster_csv(outfile, include_header_row=False,
@@ -124,3 +156,110 @@ def write_document_text_with_coverage_highlight(document_text,
 
     with open(output_txtfile, 'w') as output_file:
         output_file.write(document_text)
+
+
+def get_html_start(add_header=False, add_stylesheet=False):
+    start_string = "<html>\n"
+    if add_stylesheet:
+        start_string = (
+            start_string + '<head>\n'
+            '<link rel="stylesheet" ' +
+            'href="/public/bootstrap/css/bootstrap.min.css">\n' +
+            '</head>\n'
+            )
+    if add_header:
+        start_string = (
+            start_string + "\n<body>\n<p>" +
+            "<b>NOTE: <mark>Highlighted text is from other source</mark>" +
+            " and not highlighted is original by author.</b></p>\n")
+    start_string = start_string + "<body>\n"
+    return start_string
+
+
+def get_html_end():
+    return "</body>\n</html>"
+
+
+def write_document_html_with_coverage_highlight(coverage_data,
+                                                document_text,
+                                                outpath_prefix,
+                                                include_date=False):
+
+    print("> Writing document html with coverage highlights ...")
+    document_text_list = list(document_text)
+    document_length = len(document_text_list)
+    html_text_list = []
+
+    html_text_list.append(get_html_start(add_header=True))
+    html_text_list.append("<p>")
+
+    char_index = 0
+    prev_char_in_cluster = False
+    mark_tag_open = False
+    header_tag_open = False
+    mark_tag_reopen = False
+
+    while char_index < document_length:
+        if coverage_data[char_index] == 0:
+            this_char_in_cluster = False
+        else:
+            this_char_in_cluster = True
+
+        if (this_char_in_cluster) and (not prev_char_in_cluster):
+            html_text_list.append("<mark>")
+            mark_tag_open = True
+        elif (not this_char_in_cluster) and (prev_char_in_cluster):
+            html_text_list.append("</mark>")
+            mark_tag_open = False
+
+        if (document_text_list[char_index] == "\n" and
+                document_text_list[char_index + 1] == "\n" and
+                document_text_list[char_index + 2] == "#"):
+            header_tag_open = True
+            if mark_tag_open:
+                html_text_list.append("</mark></p>\n<p><h1>")
+                mark_tag_reopen = True
+            else:
+                html_text_list.append("</p>\n<p><h1>")
+            char_to_append = ""
+            char_index_step = 3
+        elif (document_text_list[char_index] == "\n" and
+                document_text_list[char_index + 1] == "\n"):
+            if mark_tag_open:
+                html_text_list.append("</mark>")
+                mark_tag_reopen = True
+            if header_tag_open:
+                html_text_list.append("</h1>")
+                header_tag_open = False
+            html_text_list.append("</p>")
+            char_to_append = "\n<p>"
+            char_index_step = 2
+        elif document_text_list[char_index] == "\n":
+            char_to_append = " "
+            char_index_step = 1
+        else:
+            char_to_append = cgi.escape(document_text_list[char_index])
+            char_index_step = 1
+
+        html_text_list.append(char_to_append)
+
+        if mark_tag_reopen:
+            html_text_list.append("<mark>")
+            mark_tag_reopen = False
+        prev_char_in_cluster = this_char_in_cluster
+        char_index += char_index_step
+
+    if mark_tag_open:
+        html_text_list.append("</mark>")
+    html_text_list.append("</p>")
+    html_text_list.append(get_html_end())
+    html_text_results = ''.join(html_text_list)
+
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+    outdir = "output/" + outpath_prefix + "/"
+    create_dir_if_not_exists(outdir)
+
+    output_htmlfile = (outdir + "coverage_highlight.html")
+    with open(output_htmlfile, 'w') as output_file:
+        output_file.write(html_text_results)
