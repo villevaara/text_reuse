@@ -16,6 +16,6 @@ document_ids:
   - "1394100115"
 filter_out_author: "Thoyras, Rapin (1661-1725)"
 author_ignore_id: ""
-require_first_author: "orig"
-filter_out_year_below: 1725
-filter_out_year_above: -1
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: 1731

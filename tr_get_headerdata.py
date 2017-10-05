@@ -151,7 +151,11 @@ def write_csv_total_fragments_per_author_per_year(plotdata,
 
     outdir = "output/" + outpath_prefix + "/"
     create_dir_if_not_exists(outdir)
-    outputfile = outdir + "fragments_per_author.csv"
+    topx = len(plotdata)
+    outputfile = (
+        outdir + "fragments_per_author_per_decade_top" +
+        str(topx) +
+        ".csv")
 
     with open(outputfile, 'w') as output_csv:
         headerrow = ["decade"]
@@ -167,6 +171,24 @@ def write_csv_total_fragments_per_author_per_year(plotdata,
             for entry in plotdata:
                 datarow.append(entry.get('decade_fragments')[i])
             csvwriter.writerow(datarow)
+
+
+def write_csv_total_fragments_per_author(plotdata,
+                                         outpath_prefix,
+                                         include_date=True):
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+    outdir = "output/" + outpath_prefix + "/"
+    create_dir_if_not_exists(outdir)
+    outputfile = outdir + "fragments_per_author.csv"
+
+    with open(outputfile, 'w') as output_csv:
+        headerrow = ["author", "total_fragments"]
+        csvwriter = csv.writer(output_csv)
+        csvwriter.writerow(headerrow)
+        for entry in plotdata:
+            csvwriter.writerow([entry.get('author'),
+                                entry.get('total')])
 
 
 def get_totals_for_headers(headerdata, cluster_list):
@@ -279,10 +301,11 @@ print("> Loading good metadata...")
 good_metadata_jsonfile = "data/metadata/good_metadata.json"
 good_metadata = load_good_metadata(good_metadata_jsonfile)
 print("  >> Done!")
+all_outpaths = []
 
 for document_id in document_ids:
-
     outpath_prefix = outpath_prefix_base + "/" + document_id
+    all_outpaths.append(get_outpath_prefix_with_date(outpath_prefix))
     # get doc from api
     ecco_api_client = OctavoEccoClient()
     cluster_api_client = OctavoEccoClusterClient(limit=api_limit,
@@ -354,6 +377,9 @@ for document_id in document_ids:
 
     plotdata_fragments_per_author_per_year = (
         get_plotdata_fragments_per_author_per_year(cluster_list_filtered))
+
+    write_csv_total_fragments_per_author(
+        plotdata_fragments_per_author_per_year, outpath_prefix)
 
     plotdata_fragments_per_author_per_year_filtered = (
         plotdata_fragments_per_author_per_year_filters(
