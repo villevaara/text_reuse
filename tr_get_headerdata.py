@@ -67,7 +67,8 @@ def get_cluster_list_with_filters(cluster_list,
                                   filter_out_author="",
                                   author_ignore_id="",
                                   filter_out_year_below=-1,
-                                  filter_out_year_above=-1,):
+                                  filter_out_year_above=-1,
+                                  only_keep_first_author=False):
     print("> Filtering cluster list ...")
     cluster_list_results = []
     for cluster in cluster_list:
@@ -86,6 +87,10 @@ def get_cluster_list_with_filters(cluster_list,
             results_cluster.filter_out_year_above(filter_out_year_above)
         if filter_out_year_below != -1:
             results_cluster.filter_out_year_below(filter_out_year_below)
+        if only_keep_first_author:
+            first_ed_year = results_cluster.get_lowest_first_ed_year_guess()
+            results_cluster.filter_out_firts_ed_year_not(first_ed_year)
+            results_cluster.filter_only_one_book_per_author()
         if len(results_cluster.fragment_list) > 0:
             cluster_list_results.append(results_cluster)
     print("  >> Done!")
@@ -295,6 +300,7 @@ author_ignore_id = config_file_params.get('author_ignore_id')
 require_first_author = config_file_params.get('require_first_author')
 filter_out_year_below = config_file_params.get('filter_out_year_below')
 filter_out_year_above = config_file_params.get('filter_out_year_above')
+only_keep_first_author = config_file_params.get('only_keep_first_author')
 
 # get metadata
 print("> Loading good metadata...")
@@ -359,7 +365,9 @@ for document_id in document_ids:
         require_first_author=require_first_author,
         author_ignore_id=author_ignore_id,
         filter_out_year_below=filter_out_year_below,
-        filter_out_year_above=filter_out_year_above)
+        filter_out_year_above=filter_out_year_above,
+        only_keep_first_author=only_keep_first_author,
+        )
 
     # plotting
     print("> Plotting ...")

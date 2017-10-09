@@ -118,6 +118,38 @@ class TextReuseCluster(object):
         self.fragment_list = (
             self.get_fragments_filter_out_year_below(year))
 
+    def get_lowest_first_ed_year_guess(self):
+        first_ed_years = []
+        for fragment in self.fragment_list:
+            first_ed_years.append(fragment.first_ed_year_guess)
+        if len(first_ed_years) > 0:
+            first_year = min(first_ed_years)
+        else:
+            first_year = -1
+        return first_year
+
+    def get_fragments_filter_out_firts_ed_year_not(self, year):
+        retlist = []
+        for fragment in self.fragment_list:
+            if int(fragment.first_ed_year_guess) == int(year):
+                retlist.append(fragment)
+        return retlist
+
+    def filter_only_one_book_per_author(self):
+        authors_included = set()
+        retlist = []
+        for fragment in self.fragment_list:
+            if fragment.author in authors_included:
+                continue
+            else:
+                retlist.append(fragment)
+                authors_included.add(fragment.author)
+        self.fragment_list = retlist
+
+    def filter_out_firts_ed_year_not(self, year):
+        self.fragment_list = (
+            self.get_fragments_filter_out_firts_ed_year_not(year))
+
     def get_fragments_filter_out_year_above(self, year):
         retlist = []
         for fragment in self.fragment_list:

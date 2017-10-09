@@ -48,14 +48,18 @@ def get_author_from_estc(ecco_id, good_metadata):
     author = estc_metadata.get('estc_author')
     if not author:
         author = "NO AUTHOR IN ESTC DATA"
-    # hit_dict = {'eccoid': eccoid,
-    #             'year': year,
-    #             'author': author,
-    #             'title': estc_metadata.get('estc_title'),
-    #             'estcid': estc_metadata.get('estc_id'),
-    #             'text': hit.get('text')}
-    # hits_sorted.append(hit_dict)
     return author
+
+
+def get_author_bd_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
+    author_birth = estc_metadata.get('estc_author_birth')
+    if author_birth == "NA":
+        author_birth = None
+    author_death = estc_metadata.get('estc_author_death')
+    if author_death == "NA":
+        author_death = None
+    return {'birth': author_birth, 'death': author_death}
 
 
 def get_estcid_from_estc(ecco_id, good_metadata):

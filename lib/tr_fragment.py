@@ -12,6 +12,7 @@ from lib.text_reuse_common import (
     get_year_from_estc,
     get_estcid_from_estc,
     get_title_from_estc,
+    get_author_bd_from_estc,
     )
 
 
@@ -24,6 +25,8 @@ class TextReuseFragment(object):
         self.cluster_id = cluster_id
         self.title = None
         self.author = None
+        self.author_birth = None
+        self.author_death = None
         self.year = None
         self.text = text
         self.location = None
@@ -46,6 +49,7 @@ class TextReuseFragment(object):
         self.seed_header_start_index = None
         self.seed_header_end_index = None
         self.seed_uid = None
+        self.first_ed_year_guess = None
 
     def set_seed_data(self, seed_data):
         self.seed_document_id = seed_data.get('seed_document_id')
@@ -69,6 +73,23 @@ class TextReuseFragment(object):
             self.ecco_id, good_metadata)
         self.title = get_title_from_estc(
             self.ecco_id, good_metadata)
+        bd = get_author_bd_from_estc(self.ecco_id, good_metadata)
+        self.author_birth = bd.get('birth')
+        self.author_death = bd.get('death')
+        self.first_ed_year_guess = (
+            self.__get_guessed_first_ed_year())
+
+    def __get_guessed_first_ed_year(self):
+        if self.author_birth is not None:
+            first_ed_year_guess = int(self.author_birth) + 45
+        elif self.author_death is not None:
+            first_ed_year_guess = int(self.author_death) - 10
+        else:
+            first_ed_year_guess = 9999
+        if first_ed_year_guess > self.year:
+            return self.year
+        else:
+            return first_ed_year_guess
 
     def add_headerdata(self, headerdata):
         if self.octavo_start_index is not None:
