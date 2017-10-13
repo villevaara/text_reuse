@@ -227,13 +227,13 @@ class FragmentList(object):
             print("Building document id index.")
             self.set_document_id_index()
 
-    def add_metadata(self, good_metadata=None):
+    def add_metadata(self, author_metadata, good_metadata=None):
         if good_metadata is None:
             good_metadata_jsonfile = "data/metadata/good_metadata.json"
             good_metadata = load_good_metadata(good_metadata_jsonfile)
         print("  > Adding metadata to fragments.")
         for fragment in self.fragment_list:
-            fragment.add_metadata(good_metadata)
+            fragment.add_metadata(good_metadata, author_metadata)
 
     def add_headerdata(self, headerdata, document_id):
         print("  > Adding headerdata to matching fragments.")

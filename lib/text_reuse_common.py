@@ -54,10 +54,10 @@ def get_author_from_estc(ecco_id, good_metadata):
 def get_author_bd_from_estc(ecco_id, good_metadata):
     estc_metadata = good_metadata.get(ecco_id)
     author_birth = estc_metadata.get('estc_author_birth')
-    if author_birth == "NA":
+    if author_birth == "NA" or author_birth == "ESTC DATA MISSING":
         author_birth = None
     author_death = estc_metadata.get('estc_author_death')
-    if author_death == "NA":
+    if author_death == "NA" or author_death == "ESTC DATA MISSING":
         author_death = None
     return {'birth': author_birth, 'death': author_death}
 

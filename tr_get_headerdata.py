@@ -20,7 +20,6 @@ from lib.utils_common import (
 from lib.headerdata import (
     get_headers_for_document_id,
     get_header_summary_data,
-    get_headerdata_as_dict,
     )
 
 from lib.output_csv import (
@@ -28,9 +27,9 @@ from lib.output_csv import (
     write_cluster_coverage_as_csv,
     write_header_summarydata_csv,
     write_document_html_with_coverage_highlight,
-    # write_document_text_with_coverage_highlight,
     save_plotdata_csv,
     get_outpath_prefix_with_date,
+    write_plotdata_politics_csv,
     )
 
 from lib.fragmentlists import (FragmentList,
@@ -43,9 +42,11 @@ from lib.cfg_reader import (get_config_file_params,
 
 from lib.plots import (
     get_plotdata_fragments_per_year,
-    draw_plot_fragments_per_year,
     get_plotdata_fragments_per_author_per_year,
     plotdata_fragments_per_author_per_year_filters)
+
+from lib.sum_csvs import create_csv_summaries
+from lib.author_metadata import read_author_metadata_csv
 
 
 def get_cluster_list(fragment_list, add_cluster_groups=True):
@@ -68,7 +69,8 @@ def get_cluster_list_with_filters(cluster_list,
                                   author_ignore_id="",
                                   filter_out_year_below=-1,
                                   filter_out_year_above=-1,
-                                  only_keep_first_author=False):
+                                  only_keep_first_author=False,
+                                  filter_out_estcids=None):
     print("> Filtering cluster list ...")
     cluster_list_results = []
     for cluster in cluster_list:
@@ -80,6 +82,8 @@ def get_cluster_list_with_filters(cluster_list,
             elif require_first_author == "not-orig":
                 if results_cluster.orig_author_first():
                     continue
+        if filter_out_estcids is not None:
+            results_cluster.filter_out_estcids(filter_out_estcids)
         if filter_out_author != "":
             results_cluster.filter_out_author(filter_out_author,
                                               author_ignore_id)
@@ -233,6 +237,51 @@ def get_header_plotdata(cluster_list, start_year, headerdata):
     return plotdata
 
 
+def get_plotdata_politicalview_by_header(cluster_list, headerdata,
+                                         author_metadata):
+    plotdata = []
+
+    for item in headerdata:
+        plotdata_index = item.get('index')
+        plotdata_header = item.get('header_text')
+        whig = 0
+        royalist = 0
+        jacobite = 0
+        parliamentarian = 0
+        tory = 0
+        unionist = 0
+        no_record = 0
+
+        for cluster in cluster_list:
+            if cluster.group_id == plotdata_index:
+                cluster_affiliations = cluster.get_political_affiliations(
+                    author_metadata)
+                whig += cluster_affiliations.get('whig')
+                royalist += cluster_affiliations.get('royalist')
+                jacobite += cluster_affiliations.get('jacobite')
+                parliamentarian += cluster_affiliations.get('parliamentarian')
+                tory += cluster_affiliations.get('tory')
+                unionist += cluster_affiliations.get('unionist')
+                no_record += cluster_affiliations.get('no_record')
+
+        plotdata.append({
+            'index': plotdata_index,
+            'header': plotdata_header,
+            'whig': whig,
+            'royalist': royalist,
+            'jacobite': jacobite,
+            'parliamentarian': parliamentarian,
+            'tory': tory,
+            'unionist': unionist,
+            'no_record': no_record,
+            'whig_wide': (whig + parliamentarian),
+            'tory_wide': (tory + royalist + jacobite),
+            'others_wide': (no_record + unionist),
+            })
+
+    return plotdata
+
+
 def write_header_plotdata_csv(header_plotdata,
                               outpath_prefix,
                               include_date=True):
@@ -262,7 +311,7 @@ def write_header_plotdata_csv(header_plotdata,
             csvwriter.writerow(resultrow)
 
 
-def cluster_list_remove_duplicates(cluster_list):
+def cluster_list_remove_duplicates(cluster_list, filter_author_ref=False):
     start_fragments = 0
     for cluster in cluster_list:
         start_fragments += cluster.get_length()
@@ -275,12 +324,26 @@ def cluster_list_remove_duplicates(cluster_list):
             cluster.filter_non_unique_seed_uids(used_seed_uids))
         if len(cluster.fragment_list) > 0:
             new_cluster_list.append(cluster)
+
+    retlist = new_cluster_list
+
+    if filter_author_ref:
+        used_seed_author_uids = set()
+        author_cluster_list = []
+        for cluster in retlist:
+            used_seed_uids = (
+                cluster.filter_non_unique_author_ref_uids(
+                    used_seed_author_uids))
+            if len(cluster.fragment_list) > 0:
+                author_cluster_list.append(cluster)
+        retlist = author_cluster_list
+
     end_fragments = 0
-    for cluster in new_cluster_list:
+    for cluster in retlist:
         end_fragments += cluster.get_length()
     print(" > Duplicates removed. Total " + str(end_fragments) +
           " fragments remaining.")
-    return new_cluster_list
+    return retlist
 
 
 # start_params = {'config_file': "hume2.yml",
@@ -292,6 +355,8 @@ start_params = get_start_params(sys.argv[1:])
 config_file = start_params.get('config_file')
 api_limit = start_params.get('api_limit')
 outpath_prefix_base = start_params.get('output_path_prefix')
+outpath_with_date = (
+    "output/" + get_outpath_prefix_with_date(outpath_prefix_base) + "/")
 
 config_file_params = get_config_file_params(config_file)
 document_ids = config_file_params.get('document_ids')
@@ -301,15 +366,23 @@ require_first_author = config_file_params.get('require_first_author')
 filter_out_year_below = config_file_params.get('filter_out_year_below')
 filter_out_year_above = config_file_params.get('filter_out_year_above')
 only_keep_first_author = config_file_params.get('only_keep_first_author')
+filter_out_estcids = config_file_params.get('filter_out_estcids')
 
 # get metadata
 print("> Loading good metadata...")
 good_metadata_jsonfile = "data/metadata/good_metadata.json"
 good_metadata = load_good_metadata(good_metadata_jsonfile)
+author_metadata = read_author_metadata_csv(
+    "../data-public/authors-metadata/misc/author_metadata.csv")
+
 print("  >> Done!")
 all_outpaths = []
 
-for document_id in document_ids:
+for document_id_dict in document_ids:
+    document_id = document_id_dict.get('id')
+    if (document_id_dict.get('filter_out_year_above') != -1):
+        filter_out_year_above = document_id_dict.get('filter_out_year_above')
+
     outpath_prefix = outpath_prefix_base + "/" + document_id
     all_outpaths.append(get_outpath_prefix_with_date(outpath_prefix))
     # get doc from api
@@ -343,7 +416,7 @@ for document_id in document_ids:
     document_data['splitjoined_ascii'] = (doctext_splitjoined_ascii)
 
     fragment_list = FragmentList(cluster_data, seed_docid=document_id)
-    fragment_list.add_metadata()
+    fragment_list.add_metadata(author_metadata)
     fragment_list.add_headerdata(headerdata, document_id)
 
     # remove after update!
@@ -357,7 +430,9 @@ for document_id in document_ids:
                 fragment.set_octavo_indices(docid_indexmap_unicode, False)
 
     cluster_list = get_cluster_list(fragment_list, add_cluster_groups=True)
-    cluster_list = cluster_list_remove_duplicates(cluster_list)
+    cluster_list = cluster_list_remove_duplicates(
+        cluster_list,
+        filter_author_ref=only_keep_first_author)
 
     cluster_list_filtered = get_cluster_list_with_filters(
         cluster_list=cluster_list,
@@ -367,7 +442,7 @@ for document_id in document_ids:
         filter_out_year_below=filter_out_year_below,
         filter_out_year_above=filter_out_year_above,
         only_keep_first_author=only_keep_first_author,
-        )
+        filter_out_estcids=filter_out_estcids)
 
     # plotting
     print("> Plotting ...")
@@ -391,9 +466,11 @@ for document_id in document_ids:
 
     plotdata_fragments_per_author_per_year_filtered = (
         plotdata_fragments_per_author_per_year_filters(
-            plotdata_fragments_per_author_per_year, filter_na=True, keep_top=10))
+            plotdata_fragments_per_author_per_year,
+            filter_na=True, keep_top=10))
 
-    author_plotdata_add_decades(plotdata_fragments_per_author_per_year_filtered)
+    author_plotdata_add_decades(
+        plotdata_fragments_per_author_per_year_filtered)
 
     write_csv_total_fragments_per_author_per_year(
         plotdata_fragments_per_author_per_year_filtered,
@@ -414,6 +491,12 @@ for document_id in document_ids:
                                           filter_out_year_below,
                                           headerdata)
 
+    plotdata_politics = get_plotdata_politicalview_by_header(
+        cluster_list_filtered, headerdata, author_metadata)
+
+    write_plotdata_politics_csv(plotdata_politics, outpath_prefix,
+                                include_date=True)
+
     write_header_plotdata_csv(header_plotdata,
                               outpath_prefix)
     write_cluster_list_results_csv(cluster_list_filtered,
@@ -422,9 +505,6 @@ for document_id in document_ids:
     write_cluster_coverage_as_csv(coverage_data,
                                   outpath_prefix,
                                   include_date=True)
-    # write_document_text_with_coverage_highlight(doctext_with_coverage_highlight,
-    #                                             outpath_prefix,
-    #                                             include_date=True)
     write_document_html_with_coverage_highlight(coverage_data,
                                                 document_text,
                                                 outpath_prefix,
@@ -433,6 +513,9 @@ for document_id in document_ids:
                                  outpath_prefix,
                                  outfile_suffix="",
                                  include_date=True)
+
+
+create_csv_summaries(outpath_with_date)
 
 # TODO
 # * clusterset -class

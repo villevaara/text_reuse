@@ -1,21 +1,38 @@
 document_ids:
-  - "1393700101"
-  - "1393700102"
-  - "1393700103"
-  - "1393800104"
-  - "1393800105"
-  - "1393800106"
-  - "1393900107"
-  - "1393900108"
-  - "1393900109"
-  - "1394000110"
-  - "1394000111"
-  - "1394000112"
-  - "1394100113"
-  - "1394100114"
-  - "1394100115"
+  - id: "1393700101"
+    filter_out_year_above: 1724
+  - id: "1393700102"
+    filter_out_year_above: 1725
+  - id: "1393700103"
+    filter_out_year_above: 1726
+  - id: "1393800104"
+    filter_out_year_above: 1726
+  - id: "1393800105"
+    filter_out_year_above: 1727
+  - id: "1393800106"
+    filter_out_year_above: 1727
+  - id: "1393900107"
+    filter_out_year_above: 1728
+  - id: "1393900108"
+    filter_out_year_above: 1728
+  - id: "1393900109"
+    filter_out_year_above: 1728
+  - id: "1394000110"
+    filter_out_year_above: 1729
+  - id: "1394000111"
+    filter_out_year_above: 1729
+  - id: "1394000112"
+    filter_out_year_above: 1729
+  - id: "1394100113"
+    filter_out_year_above: 1729
+  - id: "1394100114"
+    filter_out_year_above: 1730
+  - id: "1394100115"
+    filter_out_year_above: 1730
 filter_out_author: "Thoyras, Rapin (1661-1725)"
 author_ignore_id: ""
 require_first_author: "not-orig"
 filter_out_year_below: -1
 filter_out_year_above: 1731
+only_keep_first_author: True
+filter_out_estcids:

@@ -41,6 +41,33 @@ class TextReuseCluster(object):
         # print("new fragment list lenght: " + str(len(self.fragment_list)))
         return used_seed_uids
 
+    def filter_non_unique_author_ref_uids(self, used_author_ref_uids):
+        new_fragment_list = []
+        for fragment in self.fragment_list:
+            if fragment.seed_uid_simple_author in used_author_ref_uids:
+                continue
+            else:
+                new_fragment_list.append(fragment)
+                used_author_ref_uids.add(fragment.seed_uid_simple_author)
+        self.fragment_list = new_fragment_list
+        return used_author_ref_uids
+
+    def get_political_affiliations(self, author_metadata):
+        affiliations = {
+            'whig': 0,
+            'royalist': 0,
+            'jacobite': 0,
+            'parliamentarian': 0,
+            'tory': 0,
+            'unionist': 0,
+            'no_record': 0,
+        }
+        for fragment in self.fragment_list:
+            affiliation = (
+                fragment.get_author_political_affiliation(author_metadata))
+            affiliations[affiliation] += 1
+        return affiliations
+
     def get_first_year(self):
         first_year = self.fragment_list[0].year
         return first_year
@@ -95,6 +122,13 @@ class TextReuseCluster(object):
             if fragment.author == author:
                 retlist.append(fragment)
         return retlist
+
+    def filter_out_estcids(self, estcid_list):
+        retlist = []
+        for fragment in self.fragment_list:
+            if fragment.estc_id not in estcid_list:
+                retlist.append(fragment)
+        self.fragment_list = retlist
 
     def filter_out_author(self, author, ignore_id=""):
         self.fragment_list = (
@@ -212,6 +246,7 @@ class TextReuseCluster(object):
                                     'ecco_id',
                                     'estc_id',
                                     'author',
+                                    'political_view',
                                     'title',
                                     'preceding_header',
                                     'year',
@@ -237,6 +272,7 @@ class TextReuseCluster(object):
                                     fragment.ecco_id,
                                     fragment.estc_id,
                                     fragment.author,
+                                    fragment.author_politics,
                                     fragment.title,
                                     fragment.preceding_header,
                                     fragment.year,

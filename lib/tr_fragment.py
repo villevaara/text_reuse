@@ -27,6 +27,7 @@ class TextReuseFragment(object):
         self.author = None
         self.author_birth = None
         self.author_death = None
+        self.author_politics = None
         self.year = None
         self.text = text
         self.location = None
@@ -48,7 +49,9 @@ class TextReuseFragment(object):
         self.seed_header_text = None
         self.seed_header_start_index = None
         self.seed_header_end_index = None
+        self.seed_ref_length = None
         self.seed_uid = None
+        self.seed_uid_simple_author = None
         self.first_ed_year_guess = None
 
     def set_seed_data(self, seed_data):
@@ -57,12 +60,18 @@ class TextReuseFragment(object):
         self.seed_header_text = seed_data.get('seed_header_text')
         self.seed_header_start_index = seed_data.get('seed_header_start_index')
         self.seed_header_end_index = seed_data.get('seed_header_end_index')
+        self.seed_ref_length = (
+            int(self.seed_header_end_index), -
+            int(self.seed_header_start_index))
         self.seed_uid = (
             self.ecco_id + "_" +
-            str(self.seed_header_start_index) + "_" +
-            str(self.seed_header_end_index))
+            str(round(self.seed_header_start_index / 100)) + "_" +
+            str(round(self.seed_header_start_index / 100)))
+        self.seed_uid_simple_author = (
+            self.author + "_" +
+            str(round(self.seed_header_start_index / 100)))
 
-    def add_metadata(self, good_metadata):
+    def add_metadata(self, good_metadata, author_metadata):
         self.location = get_location_from_estc(
             self.ecco_id, good_metadata)
         self.author = get_author_from_estc(
@@ -78,6 +87,18 @@ class TextReuseFragment(object):
         self.author_death = bd.get('death')
         self.first_ed_year_guess = (
             self.__get_guessed_first_ed_year())
+        self.author_politics = (
+            self.get_author_political_affiliation(author_metadata))
+
+    def get_author_political_affiliation(self, author_metadata):
+        authordata = author_metadata.get(self.author)
+        if authordata is None:
+            return "no_record"
+        affiliation = authordata.get('political_views')
+        if affiliation == "":
+            return "no_record"
+        else:
+            return affiliation
 
     def __get_guessed_first_ed_year(self):
         if self.author_birth is not None:

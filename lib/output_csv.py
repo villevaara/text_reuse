@@ -35,6 +35,56 @@ def save_plotdata_csv(plotdata, xlabel, ylabel,
             csvwriter.writerow([xdata[i], ydata[i]])
 
 
+def write_plotdata_politics_csv(plotdata_politics,
+                                outpath_prefix,
+                                include_date=True):
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+    outdir = "output/" + outpath_prefix + "/"
+    create_dir_if_not_exists(outdir)
+
+    fieldnames = ['index', 'header',
+                  'whig', 'royalist', 'jacobite', 'parliamentarian',
+                  'tory', 'unionist', 'no_record',
+                  'whig_wide', 'tory_wide', 'others_wide']
+
+    output_csvfile = (outdir + "plotdata_political_views.csv")
+    with open(output_csvfile, 'w') as csvfile:
+        csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        csvwriter.writeheader()
+        for row in plotdata_politics:
+            csvwriter.writerow(row)
+
+    output_csvsummary = (outdir + "plotdata_politics_sum.csv")
+    with open(output_csvsummary, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(fieldnames[2:])
+        whig = 0
+        royalist = 0
+        jacobite = 0
+        parliamentarian = 0
+        tory = 0
+        unionist = 0
+        no_record = 0
+        whig_wide = 0
+        tory_wide = 0
+        others_wide = 0
+        for row in plotdata_politics:
+            whig += row.get('whig')
+            royalist += row.get('royalist')
+            jacobite += row.get('jacobite')
+            parliamentarian += row.get('parliamentarian')
+            tory += row.get('tory')
+            unionist += row.get('unionist')
+            no_record += row.get('no_record')
+            whig_wide += row.get('whig_wide')
+            tory_wide += row.get('tory_wide')
+            others_wide += row.get('others_wide')
+        csvwriter.writerow([whig, royalist, jacobite, parliamentarian,
+                           tory, unionist, no_record,
+                           whig_wide, tory_wide, others_wide])
+
+
 def write_cluster_list_results_csv(cluster_list, outpath_prefix,
                                    include_date=False):
 
@@ -57,6 +107,7 @@ def write_cluster_list_results_csv(cluster_list, outpath_prefix,
                                 'ecco_id',
                                 'estc_id',
                                 'author',
+                                'political_view',
                                 'title',
                                 'preceding_header',
                                 'year',
