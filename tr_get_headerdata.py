@@ -183,6 +183,7 @@ def write_csv_total_fragments_per_author_per_year(plotdata,
 
 
 def write_csv_total_fragments_per_author(plotdata,
+                                         author_metadata,
                                          outpath_prefix,
                                          include_date=True):
     if include_date:
@@ -192,12 +193,20 @@ def write_csv_total_fragments_per_author(plotdata,
     outputfile = outdir + "fragments_per_author.csv"
 
     with open(outputfile, 'w') as output_csv:
-        headerrow = ["author", "total_fragments"]
+        headerrow = ["author", "total_fragments", "political_views", "link"]
         csvwriter = csv.writer(output_csv)
         csvwriter.writerow(headerrow)
         for entry in plotdata:
+            a_meta = author_metadata[entry.get('author')]
+            views = "no_record"
+            link = "no_record"
+            if a_meta is not None:
+                views = a_meta.get("political_views")
+                link = a_meta.get("odnb_link")
             csvwriter.writerow([entry.get('author'),
-                                entry.get('total')])
+                                entry.get('total'),
+                                views,
+                                link])
 
 
 def get_totals_for_headers(headerdata, cluster_list):
@@ -380,8 +389,11 @@ all_outpaths = []
 
 for document_id_dict in document_ids:
     document_id = document_id_dict.get('id')
+
     if (document_id_dict.get('filter_out_year_above') != -1):
         filter_out_year_above = document_id_dict.get('filter_out_year_above')
+    if (document_id_dict.get('filter_out_year_below') != -1):
+        filter_out_year_below = document_id_dict.get('filter_out_year_below')
 
     outpath_prefix = outpath_prefix_base + "/" + document_id
     all_outpaths.append(get_outpath_prefix_with_date(outpath_prefix))
@@ -444,64 +456,49 @@ for document_id_dict in document_ids:
         only_keep_first_author=only_keep_first_author,
         filter_out_estcids=filter_out_estcids)
 
-    # plotting
-    print("> Plotting ...")
+    # --- total fragments per year
     plotdata_fragments_per_year = (
         get_plotdata_fragments_per_year(cluster_list_filtered))
-
     save_plotdata_csv(plotdata_fragments_per_year,
                       "year", "fragments", outpath_prefix,
                       include_date=True)
 
-    # draw_plot_fragments_per_year(plotdata_fragments_per_year,
-    #                              outpath_prefix)
+    # --- cluster data grouped by header
+    write_cluster_list_results_csv(cluster_list_filtered,
+                                   outpath_prefix,
+                                   include_date=True)
 
+    # --- authors
     print("> Plotdata fragments / author / year")
-
     plotdata_fragments_per_author_per_year = (
         get_plotdata_fragments_per_author_per_year(cluster_list_filtered))
-
+    # author totals all
     write_csv_total_fragments_per_author(
-        plotdata_fragments_per_author_per_year, outpath_prefix)
-
+        plotdata_fragments_per_author_per_year,
+        author_metadata,
+        outpath_prefix)
+    # top N
     plotdata_fragments_per_author_per_year_filtered = (
         plotdata_fragments_per_author_per_year_filters(
             plotdata_fragments_per_author_per_year,
             filter_na=True, keep_top=10))
-
     author_plotdata_add_decades(
         plotdata_fragments_per_author_per_year_filtered)
-
     write_csv_total_fragments_per_author_per_year(
         plotdata_fragments_per_author_per_year_filtered,
         outpath_prefix)
-
-    # coverage html
-    coverage_data = get_cluster_coverage_data(
-        document_id, cluster_list_filtered, ecco_api_client)
-
-    doctext_with_coverage_highlight = (
-        get_document_text_with_coverage_highlight(document_id, coverage_data,
-                                                  ecco_api_client))
-
-    header_summarydata = get_header_summary_data(cluster_list_filtered,
-                                                 document_id)
-
-    header_plotdata = get_header_plotdata(cluster_list_filtered,
-                                          filter_out_year_below,
-                                          headerdata)
-
+    # author political affiliation summary
     plotdata_politics = get_plotdata_politicalview_by_header(
         cluster_list_filtered, headerdata, author_metadata)
-
     write_plotdata_politics_csv(plotdata_politics, outpath_prefix,
                                 include_date=True)
 
-    write_header_plotdata_csv(header_plotdata,
-                              outpath_prefix)
-    write_cluster_list_results_csv(cluster_list_filtered,
-                                   outpath_prefix,
-                                   include_date=True)
+    # --- coverage html
+    coverage_data = get_cluster_coverage_data(
+        document_id, cluster_list_filtered, ecco_api_client)
+    doctext_with_coverage_highlight = (
+        get_document_text_with_coverage_highlight(document_id, coverage_data,
+                                                  ecco_api_client))
     write_cluster_coverage_as_csv(coverage_data,
                                   outpath_prefix,
                                   include_date=True)
@@ -509,11 +506,19 @@ for document_id_dict in document_ids:
                                                 document_text,
                                                 outpath_prefix,
                                                 include_date=True)
+
+    # --- summaries by header
+    header_summarydata = get_header_summary_data(cluster_list_filtered,
+                                                 document_id)
+    header_plotdata = get_header_plotdata(cluster_list_filtered,
+                                          filter_out_year_below,
+                                          headerdata)
     write_header_summarydata_csv(header_summarydata,
                                  outpath_prefix,
                                  outfile_suffix="",
                                  include_date=True)
-
+    write_header_plotdata_csv(header_plotdata,
+                              outpath_prefix)
 
 create_csv_summaries(outpath_with_date)
 

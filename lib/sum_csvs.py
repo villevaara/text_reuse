@@ -51,7 +51,7 @@ def create_csv_summaries(outputpath):
 
     # get author totals
     author_metadata = read_author_metadata_csv(
-        "data/metadata/author_metadata.csv")
+        "../data-public/authors-metadata/misc/author_metadata.csv")
     author_filenames = []
     for pathpart in current_subdirs:
         author_filenames.append(pathpart + "fragments_per_author.csv")

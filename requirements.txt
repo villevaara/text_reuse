@@ -7,11 +7,9 @@ Markdown==2.6.9
 nbformat==4.3.0
 numpy==1.12.1
 plotly==2.0.8
-psycopg2==2.6.2
 pyparsing==2.1.10
 pytz==2017.2
 PyYAML==3.12
 requests==2.13.0
 six==1.10.0
-SQLAlchemy==1.1.5
 traitlets==4.3.2
