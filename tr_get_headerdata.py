@@ -197,14 +197,16 @@ def write_csv_total_fragments_per_author(plotdata,
         csvwriter = csv.writer(output_csv)
         csvwriter.writerow(headerrow)
         for entry in plotdata:
-            a_meta = author_metadata[entry.get('author')]
+            author = entry.get('author')
+            total = entry.get('total')
             views = "no_record"
             link = "no_record"
-            if a_meta is not None:
+            if author in author_metadata.keys():
+                a_meta = author_metadata[author]
                 views = a_meta.get("political_views")
                 link = a_meta.get("odnb_link")
-            csvwriter.writerow([entry.get('author'),
-                                entry.get('total'),
+            csvwriter.writerow([author,
+                                total,
                                 views,
                                 link])
 
