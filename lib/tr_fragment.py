@@ -13,6 +13,7 @@ from lib.text_reuse_common import (
     get_estcid_from_estc,
     get_title_from_estc,
     get_author_bd_from_estc,
+    get_country_from_estc,
     )
 
 
@@ -31,6 +32,7 @@ class TextReuseFragment(object):
         self.year = None
         self.text = text
         self.location = None
+        self.country = None
         self.start_index = start_index
         self.end_index = end_index
         self.find_start_index = -1
@@ -73,6 +75,8 @@ class TextReuseFragment(object):
 
     def add_metadata(self, good_metadata, author_metadata):
         self.location = get_location_from_estc(
+            self.ecco_id, good_metadata)
+        self.country = get_country_from_estc(
             self.ecco_id, good_metadata)
         self.author = get_author_from_estc(
             self.ecco_id, good_metadata)

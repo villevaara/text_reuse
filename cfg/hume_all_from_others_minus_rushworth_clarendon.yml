@@ -1,30 +1,32 @@
 document_ids:
   - id: "0145000201"
-    filter_out_year_below: -1
     filter_out_year_above: 1761
+    filter_out_year_below: -1
   - id: "0145000202"
-    filter_out_year_below: -1
     filter_out_year_above: 1761
+    filter_out_year_below: -1
   - id: "0145100103"
-    filter_out_year_below: -1
     filter_out_year_above: 1761
+    filter_out_year_below: -1
   - id: "0145100104"
-    filter_out_year_below: -1
     filter_out_year_above: 1758
+    filter_out_year_below: -1
   - id: "0145100105"
-    filter_out_year_below: -1
     filter_out_year_above: 1758
+    filter_out_year_below: -1
   - id: "0145100106"
-    filter_out_year_below: -1
     filter_out_year_above: 1753
+    filter_out_year_below: -1
   - id: "0145100107"
-    filter_out_year_below: -1
     filter_out_year_above: 1756
+    filter_out_year_below: -1
   - id: "0145200108"
-    filter_out_year_below: -1
     filter_out_year_above: 1756
+    filter_out_year_below: -1
 filter_out_authors:
   - "Hume, David (1711-1776)"
+  - "Rushworth, John (1612-1690)"
+  - "Clarendon, Edward Hyde (1609-1674)"
 author_ignore_id: ""
 require_first_author: "not-orig"
 filter_out_year_below: -1

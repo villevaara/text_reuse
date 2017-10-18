@@ -1,0 +1,23 @@
+document_ids:
+  - id: "0018400101"
+    filter_out_year_below: -1
+    filter_out_year_above: 1746
+  - id: "0018400102"
+    filter_out_year_below: -1
+    filter_out_year_above: 1749
+  - id: "0018500103"
+    filter_out_year_below: -1
+    filter_out_year_above: 1751
+  - id: "0018500104"
+    filter_out_year_below: -1
+    filter_out_year_above: 1755
+filter_out_authors:
+  - "Carte, Thomas (1686-1754)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: True
+filter_out_estcids:
+  -
+only_keep_authors:

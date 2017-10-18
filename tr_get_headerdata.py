@@ -30,6 +30,7 @@ from lib.output_csv import (
     save_plotdata_csv,
     get_outpath_prefix_with_date,
     write_plotdata_politics_csv,
+    write_plotdata_countries_csv,
     )
 
 from lib.fragmentlists import (FragmentList,
@@ -48,6 +49,8 @@ from lib.plots import (
 from lib.sum_csvs import create_csv_summaries
 from lib.author_metadata import read_author_metadata_csv
 
+import lib.log_writer as log_writer
+
 
 def get_cluster_list(fragment_list, add_cluster_groups=True):
     print("> Getting cluster list ...")
@@ -65,12 +68,13 @@ def get_cluster_list(fragment_list, add_cluster_groups=True):
 
 def get_cluster_list_with_filters(cluster_list,
                                   require_first_author=None,
-                                  filter_out_author="",
+                                  filter_out_authors=[""],
                                   author_ignore_id="",
                                   filter_out_year_below=-1,
                                   filter_out_year_above=-1,
                                   only_keep_first_author=False,
-                                  filter_out_estcids=None):
+                                  filter_out_estcids=None,
+                                  only_keep_authors=None):
     print("> Filtering cluster list ...")
     cluster_list_results = []
     for cluster in cluster_list:
@@ -84,9 +88,6 @@ def get_cluster_list_with_filters(cluster_list,
                     continue
         if filter_out_estcids is not None:
             results_cluster.filter_out_estcids(filter_out_estcids)
-        if filter_out_author != "":
-            results_cluster.filter_out_author(filter_out_author,
-                                              author_ignore_id)
         if filter_out_year_above != -1:
             results_cluster.filter_out_year_above(filter_out_year_above)
         if filter_out_year_below != -1:
@@ -95,6 +96,13 @@ def get_cluster_list_with_filters(cluster_list,
             first_ed_year = results_cluster.get_lowest_first_ed_year_guess()
             results_cluster.filter_out_firts_ed_year_not(first_ed_year)
             results_cluster.filter_only_one_book_per_author()
+        for filter_out_author in filter_out_authors:
+            if filter_out_author != "":
+                results_cluster.filter_out_author(filter_out_author,
+                                                  author_ignore_id)
+        if only_keep_authors is not None:
+            results_cluster.only_keep_authors(only_keep_authors)
+
         if len(results_cluster.fragment_list) > 0:
             cluster_list_results.append(results_cluster)
     print("  >> Done!")
@@ -194,6 +202,7 @@ def write_csv_total_fragments_per_author(plotdata,
 
     with open(outputfile, 'w') as output_csv:
         headerrow = ["author", "total_fragments", "political_views", "link"]
+        headerrow.extend(plotdata[0].get('header_texts'))
         csvwriter = csv.writer(output_csv)
         csvwriter.writerow(headerrow)
         for entry in plotdata:
@@ -205,10 +214,9 @@ def write_csv_total_fragments_per_author(plotdata,
                 a_meta = author_metadata[author]
                 views = a_meta.get("political_views")
                 link = a_meta.get("odnb_link")
-            csvwriter.writerow([author,
-                                total,
-                                views,
-                                link])
+            outrow = [author, total, views, link]
+            outrow.extend(entry.get('header_hits'))
+            csvwriter.writerow(outrow)
 
 
 def get_totals_for_headers(headerdata, cluster_list):
@@ -293,6 +301,40 @@ def get_plotdata_politicalview_by_header(cluster_list, headerdata,
     return plotdata
 
 
+def get_plotdata_country_by_header(cluster_list, headerdata):
+    plotdata = []
+
+    for item in headerdata:
+        plotdata_index = item.get('index')
+        plotdata_header = item.get('header_text')
+        usa = 0
+        england = 0
+        scotland = 0
+        ireland = 0
+        others = 0
+
+        for cluster in cluster_list:
+            if cluster.group_id == plotdata_index:
+                cluster_countries = cluster.get_countries()
+                usa += cluster_countries.get('USA')
+                england += cluster_countries.get('England')
+                scotland += cluster_countries.get('Scotland')
+                ireland += cluster_countries.get('Ireland')
+                others += cluster_countries.get('Others')
+
+        plotdata.append({
+            'index': plotdata_index,
+            'header': plotdata_header,
+            'USA': usa,
+            'England': england,
+            'Scotland': scotland,
+            'Ireland': ireland,
+            'Others': others,
+            })
+
+    return plotdata
+
+
 def write_header_plotdata_csv(header_plotdata,
                               outpath_prefix,
                               include_date=True):
@@ -371,13 +413,14 @@ outpath_with_date = (
 
 config_file_params = get_config_file_params(config_file)
 document_ids = config_file_params.get('document_ids')
-filter_out_author = config_file_params.get('filter_out_author')
+filter_out_authors = config_file_params.get('filter_out_authors')
 author_ignore_id = config_file_params.get('author_ignore_id')
 require_first_author = config_file_params.get('require_first_author')
 filter_out_year_below = config_file_params.get('filter_out_year_below')
 filter_out_year_above = config_file_params.get('filter_out_year_above')
 only_keep_first_author = config_file_params.get('only_keep_first_author')
 filter_out_estcids = config_file_params.get('filter_out_estcids')
+only_keep_authors = config_file_params.get('only_keep_authors')
 
 # get metadata
 print("> Loading good metadata...")
@@ -388,13 +431,15 @@ author_metadata = read_author_metadata_csv(
 
 print("  >> Done!")
 all_outpaths = []
+documents_meta_dict = {}
 
 for document_id_dict in document_ids:
     document_id = document_id_dict.get('id')
 
     if (document_id_dict.get('filter_out_year_above') != -1):
         filter_out_year_above = document_id_dict.get('filter_out_year_above')
-    if (document_id_dict.get('filter_out_year_below') != -1):
+    if (document_id_dict.get('filter_out_year_below') != -1 and
+            document_id_dict.get('filter_out_year_below') is not None):
         filter_out_year_below = document_id_dict.get('filter_out_year_below')
 
     outpath_prefix = outpath_prefix_base + "/" + document_id
@@ -405,6 +450,14 @@ for document_id_dict in document_ids:
                                                  timeout=600)
     document_data = ecco_api_client.get_text_for_document_id(document_id)
     document_text = document_data.get('text')
+
+    documents_meta_dict[document_id] = {
+        'id': document_id,
+        'length': len(document_text),
+        'sequence': document_id_dict.get('sequence'),
+        'description': document_id_dict.get('description')
+    }
+
     headerdata = get_headers_for_document_id(document_id, document_text)
     cluster_ids = cluster_api_client.get_cluster_ids_list_for_document_id(
         document_id)
@@ -450,79 +503,92 @@ for document_id_dict in document_ids:
 
     cluster_list_filtered = get_cluster_list_with_filters(
         cluster_list=cluster_list,
-        filter_out_author=filter_out_author,
+        filter_out_authors=filter_out_authors,
         require_first_author=require_first_author,
         author_ignore_id=author_ignore_id,
         filter_out_year_below=filter_out_year_below,
         filter_out_year_above=filter_out_year_above,
         only_keep_first_author=only_keep_first_author,
-        filter_out_estcids=filter_out_estcids)
+        filter_out_estcids=filter_out_estcids,
+        only_keep_authors=only_keep_authors)
 
-    # --- total fragments per year
-    plotdata_fragments_per_year = (
-        get_plotdata_fragments_per_year(cluster_list_filtered))
-    save_plotdata_csv(plotdata_fragments_per_year,
-                      "year", "fragments", outpath_prefix,
-                      include_date=True)
+    if len(cluster_list_filtered) > 0:
+        # --- total fragments per year
+        plotdata_fragments_per_year = (
+            get_plotdata_fragments_per_year(cluster_list_filtered))
+        save_plotdata_csv(plotdata_fragments_per_year,
+                          "year", "fragments", outpath_prefix,
+                          include_date=True)
 
-    # --- cluster data grouped by header
-    write_cluster_list_results_csv(cluster_list_filtered,
-                                   outpath_prefix,
-                                   include_date=True)
+        # --- cluster data grouped by header
+        write_cluster_list_results_csv(cluster_list_filtered,
+                                       outpath_prefix,
+                                       include_date=True)
 
-    # --- authors
-    print("> Plotdata fragments / author / year")
-    plotdata_fragments_per_author_per_year = (
-        get_plotdata_fragments_per_author_per_year(cluster_list_filtered))
-    # author totals all
-    write_csv_total_fragments_per_author(
-        plotdata_fragments_per_author_per_year,
-        author_metadata,
-        outpath_prefix)
-    # top N
-    plotdata_fragments_per_author_per_year_filtered = (
-        plotdata_fragments_per_author_per_year_filters(
+        # --- authors
+        print("> Plotdata fragments / author / year")
+        plotdata_fragments_per_author_per_year = (
+            get_plotdata_fragments_per_author_per_year(cluster_list_filtered,
+                headerdata))
+        # author totals all
+        write_csv_total_fragments_per_author(
             plotdata_fragments_per_author_per_year,
-            filter_na=True, keep_top=10))
-    author_plotdata_add_decades(
-        plotdata_fragments_per_author_per_year_filtered)
-    write_csv_total_fragments_per_author_per_year(
-        plotdata_fragments_per_author_per_year_filtered,
-        outpath_prefix)
-    # author political affiliation summary
-    plotdata_politics = get_plotdata_politicalview_by_header(
-        cluster_list_filtered, headerdata, author_metadata)
-    write_plotdata_politics_csv(plotdata_politics, outpath_prefix,
-                                include_date=True)
+            author_metadata,
+            outpath_prefix)
+        # top N
+        plotdata_fragments_per_author_per_year_filtered = (
+            plotdata_fragments_per_author_per_year_filters(
+                plotdata_fragments_per_author_per_year,
+                filter_na=True, keep_top=10))
+        author_plotdata_add_decades(
+            plotdata_fragments_per_author_per_year_filtered)
+        write_csv_total_fragments_per_author_per_year(
+            plotdata_fragments_per_author_per_year_filtered,
+            outpath_prefix)
+        # author political affiliation summary
+        plotdata_politics = get_plotdata_politicalview_by_header(
+            cluster_list_filtered, headerdata, author_metadata)
+        write_plotdata_politics_csv(plotdata_politics, outpath_prefix,
+                                    include_date=True)
 
-    # --- coverage html
-    coverage_data = get_cluster_coverage_data(
-        document_id, cluster_list_filtered, ecco_api_client)
-    doctext_with_coverage_highlight = (
-        get_document_text_with_coverage_highlight(document_id, coverage_data,
-                                                  ecco_api_client))
-    write_cluster_coverage_as_csv(coverage_data,
-                                  outpath_prefix,
-                                  include_date=True)
-    write_document_html_with_coverage_highlight(coverage_data,
-                                                document_text,
-                                                outpath_prefix,
-                                                include_date=True)
+        # --- by publication country
+        plotdata_countries = get_plotdata_country_by_header(
+            cluster_list_filtered, headerdata)
+        write_plotdata_countries_csv(plotdata_countries, outpath_prefix)
 
-    # --- summaries by header
-    header_summarydata = get_header_summary_data(cluster_list_filtered,
-                                                 document_id)
-    header_plotdata = get_header_plotdata(cluster_list_filtered,
-                                          filter_out_year_below,
-                                          headerdata)
-    write_header_summarydata_csv(header_summarydata,
-                                 outpath_prefix,
-                                 outfile_suffix="",
-                                 include_date=True)
-    write_header_plotdata_csv(header_plotdata,
-                              outpath_prefix)
+        # --- coverage html
+        coverage_data = get_cluster_coverage_data(
+            document_id, cluster_list_filtered, ecco_api_client)
+        doctext_with_coverage_highlight = (
+            get_document_text_with_coverage_highlight(
+                document_id, coverage_data,
+                ecco_api_client))
+        write_cluster_coverage_as_csv(coverage_data,
+                                      outpath_prefix,
+                                      include_date=True)
+        write_document_html_with_coverage_highlight(coverage_data,
+                                                    document_text,
+                                                    outpath_prefix,
+                                                    include_date=True)
 
-create_csv_summaries(outpath_with_date)
+        # --- summaries by header
+        header_summarydata = get_header_summary_data(cluster_list_filtered,
+                                                     document_id)
+        header_plotdata = get_header_plotdata(cluster_list_filtered,
+                                              filter_out_year_below,
+                                              headerdata)
+        write_header_summarydata_csv(header_summarydata,
+                                     outpath_prefix,
+                                     outfile_suffix="",
+                                     include_date=True)
+        write_header_plotdata_csv(header_plotdata,
+                                  outpath_prefix)
+
+    log_writer.write_log(outpath_prefix + " finished succesfully")
+
+
+create_csv_summaries(outpath_with_date, documents_meta_dict)
+
 
 # TODO
 # * clusterset -class

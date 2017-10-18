@@ -15,6 +15,11 @@ def get_current_date_string():
     return datestring
 
 
+def get_current_timestamp_string():
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    return timestamp
+
+
 def read_csv_to_dictlist(csv_file):
     ret_list = []
     with open(csv_file, 'r') as csvfile:

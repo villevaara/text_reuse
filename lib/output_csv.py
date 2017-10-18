@@ -85,6 +85,42 @@ def write_plotdata_politics_csv(plotdata_politics,
                            whig_wide, tory_wide, others_wide])
 
 
+def write_plotdata_countries_csv(plotdata_countries,
+                                 outpath_prefix,
+                                 include_date=True):
+    if include_date:
+        outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
+    outdir = "output/" + outpath_prefix + "/"
+    create_dir_if_not_exists(outdir)
+
+    fieldnames = ['index', 'header',
+                  'USA', 'England', 'Scotland', 'Ireland', 'Others']
+
+    output_csvfile = (outdir + "plotdata_countries.csv")
+    with open(output_csvfile, 'w') as csvfile:
+        csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        csvwriter.writeheader()
+        for row in plotdata_countries:
+            csvwriter.writerow(row)
+
+    output_csvsummary = (outdir + "plotdata_countries_sum.csv")
+    with open(output_csvsummary, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(fieldnames[2:])
+        usa = 0
+        england = 0
+        scotland = 0
+        ireland = 0
+        others = 0
+        for row in plotdata_countries:
+            usa += row.get('USA')
+            england += row.get('England')
+            scotland += row.get('Scotland')
+            ireland += row.get('Ireland')
+            others += row.get('Others')
+        csvwriter.writerow([usa, england, scotland, ireland, others])
+
+
 def write_cluster_list_results_csv(cluster_list, outpath_prefix,
                                    include_date=False):
 

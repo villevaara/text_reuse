@@ -1,0 +1,18 @@
+document_ids:
+  - id: "0145100106"
+    filter_out_year_above: 1753
+  - id: "0145100107"
+    filter_out_year_above: 1756
+  - id: "0145200108"
+    filter_out_year_above: 1756
+filter_out_authors:
+  - "Hume, David (1711-1776)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: 1754
+only_keep_first_author: True
+filter_out_estcids:
+  - "T116228"
+only_keep_authors:
+  - "Clarendon, Edward Hyde (1609-1674)"

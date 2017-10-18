@@ -2,6 +2,7 @@ import plotly
 from plotly.graph_objs import Scatter, Layout
 
 from lib.output_csv import get_outpath_prefix_with_date
+from copy import deepcopy
 
 
 def get_plotdata_fragments_per_year(cluster_list,
@@ -27,6 +28,7 @@ def get_plotdata_fragments_per_year(cluster_list,
 
 
 def get_plotdata_fragments_per_author_per_year(cluster_list,
+                                               headerdata,
                                                start_year=-1,
                                                end_year=-1,
                                                test_amount=-1):
@@ -54,14 +56,30 @@ def get_plotdata_fragments_per_author_per_year(cluster_list,
         i += 1
         print(str(i) + "/" + str(number_of_authors) + " " + author)
         author_years = []
-        #
+        author_headers = deepcopy(headerdata)
+        for headerdatadict in author_headers:
+            headerdatadict['hits'] = 0
+
         for cluster in cluster_list:
             fragments_with_author = cluster.get_fragments_with_author(author)
-            #
+
             for fragment in fragments_with_author:
                 if fragment.year != 9999:
                     author_years.append(fragment.year)
-                    #
+
+                for headerdatadict in author_headers:
+                    if (headerdatadict.get('index') ==
+                            fragment.seed_header_id):
+                        headerdatadict['hits'] += 1
+
+        header_inds = []
+        header_texts = []
+        header_hits = []
+        for headerdatadict in author_headers:
+            header_inds.append(headerdatadict.get('index'))
+            header_texts.append(headerdatadict.get('header_text'))
+            header_hits.append(headerdatadict.get('hits'))
+
         author_hits_total = len(author_years)
         years_x = list(range(start_year, end_year + 1))
         author_frags_y = []
@@ -70,7 +88,10 @@ def get_plotdata_fragments_per_author_per_year(cluster_list,
             #
         author_dict = {'years': years_x, 'fragments': author_frags_y,
                        'total': author_hits_total,
-                       'author': author}
+                       'author': author,
+                       'header_inds': header_inds,
+                       'header_texts': header_texts,
+                       'header_hits': header_hits}
         results.append(author_dict)
         if test_amount != -1 and i == test_amount:
             break
@@ -83,6 +104,7 @@ def get_plotdata_fragments_per_author_per_year(cluster_list,
 def plotdata_fragments_per_author_per_year_filters(plotdata,
                                                    filter_na=True,
                                                    keep_top=10):
+    keep_top = min(keep_top, len(plotdata))
     if filter_na:
         na_index = None
         for i in range(0, keep_top):

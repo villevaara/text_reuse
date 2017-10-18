@@ -68,6 +68,23 @@ class TextReuseCluster(object):
             affiliations[affiliation] += 1
         return affiliations
 
+    def get_countries(self):
+        countries = {
+            'USA': 0,
+            'England': 0,
+            'Scotland': 0,
+            'Ireland': 0,
+            'Others': 0,
+        }
+        for fragment in self.fragment_list:
+            country = fragment.country
+            if country == "Northern Ireland":
+                country = "Ireland"
+            if country not in countries.keys():
+                country = "Others"
+            countries[country] += 1
+        return countries
+
     def get_first_year(self):
         first_year = self.fragment_list[0].year
         return first_year
@@ -133,6 +150,13 @@ class TextReuseCluster(object):
     def filter_out_author(self, author, ignore_id=""):
         self.fragment_list = (
             self.get_fragments_filter_out_author(author, ignore_id))
+
+    def only_keep_authors(self, only_keep_authors):
+        retlist = []
+        for fragment in self.fragment_list:
+            if fragment.author in only_keep_authors:
+                retlist.append(fragment)
+        self.fragment_list = retlist
 
     def get_fragments_filter_out_document_id(self, document_id):
         retlist = []

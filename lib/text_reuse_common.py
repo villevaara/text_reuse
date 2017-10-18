@@ -70,6 +70,14 @@ def get_estcid_from_estc(ecco_id, good_metadata):
     return estcid
 
 
+def get_country_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
+    country = estc_metadata.get('estc_country')
+    if not country:
+        country = "NO DATA FOR FIELD IN ESTC"
+    return country
+
+
 def get_location_from_estc(ecco_id, good_metadata):
     estc_metadata = good_metadata.get(ecco_id)
     location = estc_metadata.get('estc_publication_place')

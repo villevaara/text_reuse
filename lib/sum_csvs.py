@@ -16,21 +16,27 @@ def add_to_author_totals(author_totals, filename):
                     author_totals[line[0]] + int(line[1]))
 
 
-def add_filename_to_totals(outfilename, filename, book_index):
-    # book_index = 1
+def add_filename_to_totals(outfilename, filename,
+                           book_index, documents_meta_dict):
+    # document_length = documents_meta_dict[book_index].get('length')
+    # document_sequence = documents_meta_dict[book_index].get('sequence')
+    # document_description = documents_meta_dict[book_index].get('description')
     with open(filename, 'r') as csvfile:
         csvreader = csv.reader(csvfile)
         next(csvreader, None)  # skip the headers
         total = 0
         for line in csvreader:
             total += int(line[6])
-        outrow = [book_index, total]
+        outrow = [book_index, total,
+                  documents_meta_dict[book_index].get('length'),
+                  documents_meta_dict[book_index].get('description'),
+                  documents_meta_dict[book_index].get('sequence')]
         with open(outfilename, 'a') as csvoutfile:
-            csvwriter = csv.writer(csvoutfile)
+            csvwriter = csv.writer(csvoutfile, quoting=csv.QUOTE_ALL)
             csvwriter.writerow(outrow)
 
 
-def create_csv_summaries(outputpath):
+def create_csv_summaries(outputpath, documents_meta_dict):
 
     # def get_filenamesums(filename):
     current_subdirs = glob(outputpath + "*/")
@@ -43,11 +49,13 @@ def create_csv_summaries(outputpath):
 
     with open(outfilename, 'w') as csvoutfile:
         csvwriter = csv.writer(csvoutfile)
-        csvwriter.writerow(['volume', 'fragments'])
+        csvwriter.writerow(['volume', 'fragments', 'length',
+                            'description', 'sequence'])
 
     for filename in filenames:
         book_index = filename.split('/')[2]
-        add_filename_to_totals(outfilename, filename, book_index)
+        add_filename_to_totals(outfilename, filename,
+                               book_index, documents_meta_dict)
 
     # get author totals
     author_metadata = read_author_metadata_csv(
