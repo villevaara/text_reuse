@@ -1,38 +1,72 @@
 document_ids:
   - id: "1393700101"
     filter_out_year_above: 1724
+    sequence: 1
+    description: "Caesar - Danes (Edward the Marry)"
   - id: "1393700102"
     filter_out_year_above: 1725
+    sequence: 2
+    description: "Ethelred II - Henry I, Stephan"
   - id: "1393700103"
     filter_out_year_above: 1726
+    sequence: 3
+    description: "Henry II - Henry III"
   - id: "1393800104"
     filter_out_year_above: 1726
+    sequence: 4
+    description: "Edward I - Richard II"
   - id: "1393800105"
     filter_out_year_above: 1727
+    sequence: 5
+    description: "Henry IV - Henry VI"
   - id: "1393800106"
     filter_out_year_above: 1727
+    sequence: 6
+    description: "Edward IV - Henry VII"
   - id: "1393900107"
     filter_out_year_above: 1728
+    sequence: 7
+    description: "Henry VIII"
   - id: "1393900108"
     filter_out_year_above: 1728
+    sequence: 8
+    description: "Edward VI - Elizabeth"
   - id: "1393900109"
     filter_out_year_above: 1728
+    sequence: 9
+    description: "James I"
   - id: "1394000110"
     filter_out_year_above: 1729
+    sequence: 10
+    description: "Charles I (1/3)"
   - id: "1394000111"
     filter_out_year_above: 1729
+    sequence: 11
+    description: "Charles I (2/3)"
   - id: "1394000112"
     filter_out_year_above: 1729
+    sequence: 12
+    description: "Charles I (3/3)"
   - id: "1394100113"
     filter_out_year_above: 1729
+    sequence: 13
+    description: "The Commonwealth - Charles II (1/2)"
   - id: "1394100114"
     filter_out_year_above: 1730
+    filter_out_year_above: -1
+    sequence: 14
+    description: "Charles II (2/2)"
   - id: "1394100115"
     filter_out_year_above: 1730
-filter_out_author: "Thoyras, Rapin (1661-1725)"
+    sequence: 15
+    description: "James II"
+filter_out_authors:
+  - "Thoyras, Rapin (1661-1725)"
 author_ignore_id: ""
 require_first_author: "not-orig"
 filter_out_year_below: -1
 filter_out_year_above: 1731
 only_keep_first_author: True
 filter_out_estcids:
+  -
+only_keep_authors:

@@ -2,15 +2,23 @@ document_ids:
   - id: "0018400101"
     filter_out_year_below: -1
     filter_out_year_above: 1746
+    sequence: 1
+    description: "Caesar - John"
   - id: "0018400102"
     filter_out_year_below: -1
     filter_out_year_above: 1749
+    sequence: 2
+    description: "Henry III - Henry VII"
   - id: "0018500103"
     filter_out_year_below: -1
     filter_out_year_above: 1751
+    sequence: 3
+    description: "Henry VII - James I(1/2)"
   - id: "0018500104"
     filter_out_year_below: -1
     filter_out_year_above: 1755
+    sequence: 4
+    description: "James I(2/2) - Charles II"
 filter_out_authors:
   - "Carte, Thomas (1686-1754)"
 author_ignore_id: ""
