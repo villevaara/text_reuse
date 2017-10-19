@@ -2,6 +2,7 @@ data/*
 !data/eccoids/
 output/
 venv/
+venv35/
 *.gz
 __pycache__/
 meta_clusters.*
