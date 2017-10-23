@@ -48,3 +48,4 @@ filter_out_year_above: 1754
 only_keep_first_author: True
 filter_out_estcids:
   - "T116228"
+  - "T202126"

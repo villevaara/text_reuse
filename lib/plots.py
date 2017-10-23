@@ -3,6 +3,8 @@ from plotly.graph_objs import Scatter, Layout
 
 from lib.output_csv import get_outpath_prefix_with_date
 from copy import deepcopy
+from math import floor
+# from collections import OrderedDict
 
 
 def get_plotdata_fragments_per_year(cluster_list,
@@ -25,6 +27,49 @@ def get_plotdata_fragments_per_year(cluster_list,
     for year in years_x:
         frags_y.append(all_years_list.count(year))
     return {'x': years_x, 'y': frags_y}
+
+
+def get_plotdata_fragments_per_first_ed_year(cluster_list,
+                                             start_year=-1,
+                                             end_year=-1):
+    # get all years in clusters
+    all_years_list = []
+    for cluster in cluster_list:
+        all_years_list.extend(cluster.get_guessed_first_ed_years())
+    # filter not found years
+    all_years_list = [x for x in all_years_list if x is not None]
+    # get first and last year of all clusters
+    if start_year == -1:
+        start_year = min(all_years_list)
+    if end_year == -1:
+        end_year = max(all_years_list)
+    # years can be set manual too to compare two datasets
+    years_x = list(range(start_year, end_year + 1))
+    frags_y = []
+    for year in years_x:
+        frags_y.append(all_years_list.count(year))
+    return {'x': years_x, 'y': frags_y}
+
+
+def get_plotdata_first_ed_per_decade(cluster_list):
+    fed_years = []
+    for cluster in cluster_list:
+        fed_years.extend(cluster.get_guessed_first_ed_years())
+    # filter not found years
+    fed_years = [x for x in fed_years if x is not None]
+    fed_decades = []
+    for fed_year in fed_years:
+        year_decade = floor(int(fed_year)/10)*10
+        fed_decades.append(year_decade)
+    # min_year = min(fed_years['x'])
+    min_decade = min(fed_decades)
+    # max_year = max(fed_years['x'])
+    max_decade = max(fed_decades)
+    decades = list(range(min_decade, max_decade + 1, 10))
+    hits_y = []
+    for decade in decades:
+        hits_y.append(fed_decades.count(decade))
+    return {'x': decades, 'y': hits_y}
 
 
 def get_plotdata_fragments_per_author_per_year(cluster_list,

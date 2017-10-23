@@ -44,7 +44,9 @@ from lib.cfg_reader import (get_config_file_params,
 from lib.plots import (
     get_plotdata_fragments_per_year,
     get_plotdata_fragments_per_author_per_year,
-    plotdata_fragments_per_author_per_year_filters)
+    plotdata_fragments_per_author_per_year_filters,
+    get_plotdata_fragments_per_first_ed_year,
+    get_plotdata_first_ed_per_decade)
 
 from lib.sum_csvs import create_csv_summaries
 from lib.author_metadata import read_author_metadata_csv
@@ -520,6 +522,18 @@ for document_id_dict in document_ids:
                           "year", "fragments", outpath_prefix,
                           include_date=True)
 
+        # --- fragments per first ed year
+        fed_years = get_plotdata_fragments_per_first_ed_year(
+            cluster_list_filtered)
+        save_plotdata_csv(fed_years,
+                          "first_ed_year", "fragments", outpath_prefix,
+                          include_date=True)
+
+        fed_decades = get_plotdata_first_ed_per_decade(cluster_list_filtered)
+        save_plotdata_csv(fed_decades,
+                          "first_ed_decade", "fragments", outpath_prefix,
+                          include_date=True)
+
         # --- cluster data grouped by header
         write_cluster_list_results_csv(cluster_list_filtered,
                                        outpath_prefix,
@@ -528,7 +542,8 @@ for document_id_dict in document_ids:
         # --- authors
         print("> Plotdata fragments / author / year")
         plotdata_fragments_per_author_per_year = (
-            get_plotdata_fragments_per_author_per_year(cluster_list_filtered,
+            get_plotdata_fragments_per_author_per_year(
+                cluster_list_filtered,
                 headerdata))
         # author totals all
         write_csv_total_fragments_per_author(

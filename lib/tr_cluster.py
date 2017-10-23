@@ -99,6 +99,12 @@ class TextReuseCluster(object):
             all_years.append(fragment.year)
         return all_years
 
+    def get_guessed_first_ed_years(self):
+        all_years = []
+        for fragment in self.fragment_list:
+            all_years.append(fragment.first_ed_year_guess)
+        return all_years
+
     def get_length(self):
         length = len(self.fragment_list)
         return length
@@ -274,6 +280,7 @@ class TextReuseCluster(object):
                                     'title',
                                     'preceding_header',
                                     'year',
+                                    'guessed_first_ed_year',
                                     'location',
                                     'text_before',
                                     'text',
@@ -300,6 +307,7 @@ class TextReuseCluster(object):
                                     fragment.title,
                                     fragment.preceding_header,
                                     fragment.year,
+                                    fragment.first_ed_year_guess,
                                     fragment.location,
                                     fragment.text_before,
                                     fragment.text,
