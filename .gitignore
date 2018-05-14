@@ -3,6 +3,7 @@ data/*
 output/
 venv/
 _venv35/
+venv-old/
 *.gz
 __pycache__/
 meta_clusters.*
@@ -13,3 +14,6 @@ gephi/
 *.csv
 code_legacy/
 *.sublime*
+webdata/
+docs/
+temp/

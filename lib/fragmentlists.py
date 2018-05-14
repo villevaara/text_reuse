@@ -47,10 +47,10 @@ def get_fragmentlist(cluster_data, document_text_data,
             print("Processing item: " + str(i) +
                   " / " + str(cluster_data_length))
             print("documentID: " + item.get('documentID'))
-            print("clusterID:  " + str(item.get('clusterID')))
+            print("fragmentID:  " + str(item.get('fragmentID')))
         i = i + 1
         fragment = TextReuseFragment(ecco_id=item.get('documentID'),
-                                     cluster_id=item.get('clusterID'),
+                                     cluster_id=item.get('fragmentID'),
                                      text=item.get('text'),
                                      start_index=item.get('startIndex'),
                                      end_index=item.get('endIndex'))
@@ -176,6 +176,7 @@ class FragmentList(object):
     def __init__(self, cluster_data, seed_docid):
 
         self.seed_docid = seed_docid  # not used ...
+        self.seed_fragment = None
         self.fragment_list = (
             self.get_initial_fragment_list(cluster_data))
         self.cluster_id_index = dict()
@@ -188,11 +189,13 @@ class FragmentList(object):
         print("items in list: " + str(cluster_data_length))
         for item in cluster_data:
             fragment = TextReuseFragment(ecco_id=item.get('documentID'),
-                                         cluster_id=item.get('clusterID'),
+                                         cluster_id=item.get('fragmentID'),
                                          text=item.get('text'),
                                          start_index=item.get('startIndex'),
                                          end_index=item.get('endIndex'))
             fragment_list.append(fragment)
+            if fragment.ecco_id == self.seed_docid:
+                self.seed_fragment = fragment
         return fragment_list
 
     def set_cluster_id_index(self):

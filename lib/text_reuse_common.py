@@ -86,6 +86,14 @@ def get_location_from_estc(ecco_id, good_metadata):
     return location
 
 
+def get_first_ed_year_guess_from_estc(ecco_id, good_metadata):
+    estc_metadata = good_metadata.get(ecco_id)
+    first_ed_year_guess = estc_metadata.get('first_ed_year')
+    if first_ed_year_guess is not None:
+        first_ed_year_guess = int(first_ed_year_guess)
+    return first_ed_year_guess
+
+
 def get_year_from_estc(ecco_id, good_metadata):
     estc_metadata = good_metadata.get(ecco_id)
     year = estc_metadata.get('estc_publication_year')

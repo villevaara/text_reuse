@@ -10,7 +10,7 @@ from lib.octavo_api_client import OctavoEccoClusterClient
 def get_clusters(data_docs):
     clusters = {}
     for doc in data_docs:
-        cluster_id = str(doc.get('clusterID'))
+        cluster_id = str(doc.get('fragmentID'))
         document_id = str(doc.get('documentID'))
         if cluster_id in clusters.keys():
             clusters[cluster_id].append(document_id)
@@ -41,7 +41,7 @@ def enrich_cluster_data(cluster_data, good_metadata):
         year = get_year_from_estc(item_document_id, good_metadata)
         estcid = get_estcid_from_estc(item_document_id, good_metadata)
         new_item = {'document_id': str(item_document_id),
-                    'cluster_id': str(item.get('clusterID')),
+                    'cluster_id': str(item.get('fragmentID')),
                     'title': item.get('title'),
                     'author': author,
                     'year': year,

@@ -1,0 +1,16 @@
+document_ids:
+  - id: "0620500400"
+    filter_out_year_below: 1768
+    filter_out_year_above: -1
+    sequence: 1
+    description: "Civil Society"
+filter_out_authors:
+  - "Ferguson, Adam (1723-1816)"
+author_ignore_id: ""
+require_first_author: "orig"
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: False
+filter_out_estcids:
+  -
+only_keep_authors:

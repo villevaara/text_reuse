@@ -1,14 +1,51 @@
 document_ids:
-  - "0145000201"
-  - "0145000202"
-  - "0145100103"
-  - "0145100104"
-  - "0145100105"
-  - "0145100106"
-  - "0145100107"
-  - "0145200108"
-filter_out_author: "Hume, David (1711-1776)"
+  - id: "0145000201"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 1
+    description: "1. Anglo-Saxons - Henry II"
+  - id: "0145000202"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 2
+    description: "2. Richard I - Edward III"
+  - id: "0145100103"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 3
+    description: "3. Richard II - Henry VIII(1/2)"
+  - id: "0145100104"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 4
+    description: "4. Henry VIII(2/2) - Mary"
+  - id: "0145100105"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 5
+    description: "5. Elizabeth"
+  - id: "0145100106"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 6
+    description: "6. James I - Charles I(1/2)"
+  - id: "0145100107"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 7
+    description: "7. Charles I(2/2) - The Commonwealth - Charles II(1/2)"
+  - id: "0145200108"
+    filter_out_year_below: -1
+    filter_out_year_above: -1
+    sequence: 8
+    description: "8. Charles II(2/2) - James II"
+filter_out_authors:
+  -
 author_ignore_id: ""
-require_first_author: "orig"
-filter_out_year_below: 1754
+only_keep_first_author: False
+require_first_author: False
+filter_out_year_below: -1
 filter_out_year_above: -1
+filter_out_estcids:
+  -
+only_keep_authors:

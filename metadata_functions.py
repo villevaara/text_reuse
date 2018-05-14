@@ -2,6 +2,15 @@ import csv
 import json
 
 
+def read_first_ed_years(csv_file):
+    with open(csv_file) as first_ed_year_file:
+        reader = csv.DictReader(first_ed_year_file)
+        first_ed_years = {}
+        for row in reader:
+            first_ed_years[row.get('estcid')] = row.get('first_ed_year')
+        return first_ed_years
+
+
 def read_estc_dump(csv_file):
     with open(csv_file) as estc_dump_file:
         reader = csv.DictReader(estc_dump_file)
@@ -45,15 +54,30 @@ def get_ecco_dump_dict(json_file):
         return ecco_dict
 
 
-def get_ecco_metadata(estc_dump, ecco_id_pairs):
+def get_eebo_dump_idpairs(json_file):
+    with open(json_file) as eebo_dump_file:
+        json_data = json.load(eebo_dump_file)
+        eebo_data = json_data.get('results').get('docs')
+        eebo_id_pairs = list()
+        for row in eebo_data:
+            eccoid = row.get('documentID')
+            estcid = row.get('ESTCID')
+            estcid = fix_estc_id(estcid)
+            id_pair = {'eccoid': eccoid, 'estcid': estcid}
+            eebo_id_pairs.append(id_pair)
+        return eebo_id_pairs
+
+
+def get_ecco_metadata(estc_dump, ecco_id_pairs, first_ed_years):
     good_metadata = dict()
     for id_pair in ecco_id_pairs:
         eccoid = id_pair.get('eccoid')
         estcid = id_pair.get('estcid')
+        first_ed_year = first_ed_years.get(estcid)
         estc_metadata = estc_dump.get(estcid)
         # print("id: " + str(estcid))
 
-        if type(estc_metadata) != dict:
+        if estc_metadata is None:
             print(str(eccoid) + "," + str(estcid))
             estc_author = 'ESTC DATA MISSING'
             estc_author_birth = 'ESTC DATA MISSING'
@@ -84,7 +108,8 @@ def get_ecco_metadata(estc_dump, ecco_id_pairs):
                    'estc_publication_place': estc_publication_place,
                    'estc_title': estc_title,
                    'estc_language': estc_language,
-                   'estc_country': estc_country}
+                   'estc_country': estc_country,
+                   'first_ed_year': first_ed_year}
         good_metadata[eccoid] = new_row
     return good_metadata
 

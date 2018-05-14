@@ -126,17 +126,21 @@ def create_csv_summaries(outputpath, documents_meta_dict):
     with open(outfilename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow([
-            'volume', 'whig', 'royalist', 'jacobite', 'parliamentarian',
+            'volume', 'content', 'sequence',
+            'whig', 'royalist', 'jacobite', 'parliamentarian',
             'tory', 'unionist', 'no_record',
             'whig_wide', 'tory_wide', 'others_wide'])
 
         for filename in pol_filenames:
             bookid = filename.split('/')[2]
+            book_meta = documents_meta_dict[bookid]
             with open(filename, 'r') as readfile:
                 csvreader = csv.DictReader(readfile)
                 for row in csvreader:
                     csvwriter.writerow(
                         [bookid,
+                         book_meta.get('description'),
+                         book_meta.get('sequence'),
                          row.get('whig'),
                          row.get('royalist'),
                          row.get('jacobite'),

@@ -2,17 +2,17 @@ document_ids:
   - id: "0145100106"
     filter_out_year_below: -1
     filter_out_year_above: 1753
-    sequence: 6
+    sequence: 1
     description: "6. James I - Charles I(1/2)"
   - id: "0145100107"
     filter_out_year_below: -1
     filter_out_year_above: 1756
-    sequence: 7
+    sequence: 2
     description: "7. Charles I(2/2) - The Commonwealth - Charles II(1/2)"
   - id: "0145200108"
     filter_out_year_below: -1
     filter_out_year_above: 1756
-    sequence: 8
+    sequence: 3
     description: "8. Charles II(2/2) - James II"
 filter_out_authors:
   - "Hume, David (1711-1776)"
@@ -23,5 +23,5 @@ filter_out_year_above: 1754
 only_keep_first_author: True
 filter_out_estcids:
   - "T116228"
+  - "T202126"
 only_keep_authors:
-  - "Clarendon, Edward Hyde (1609-1674)"

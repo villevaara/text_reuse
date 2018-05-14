@@ -1,0 +1,48 @@
+document_ids:
+  - id: "0162900301"
+    estcid: "T082467" 
+    filter_out_year_below: -1
+    filter_out_year_above: 1761
+    sequence: 1
+    description: "1. Caesar - John"
+  - id: "0162900302"
+    estcid: "T082467"
+    filter_out_year_below: -1
+    filter_out_year_above: 1761
+    sequence: 2
+    description: "2. Henry III - Richard III"
+  - id: "0429000101"
+    estcid: "T085928"
+    filter_out_year_below: -1
+    filter_out_year_above: 1758
+    sequence: 3
+    description: "3. Henry VII - Mary"
+  - id: "0429000102"
+    estcid: "T085928"
+    filter_out_year_below: -1
+    filter_out_year_above: 1758
+    sequence: 4
+    description: "4. Elizabeth"
+  - id: "0156400400"
+    estcid: "T082483"
+    filter_out_year_below: -1
+    filter_out_year_above: 1753
+    sequence: 5
+    description: "5. James I - Charles I"
+  - id: "0162200200"
+    estcid: "T082481"
+    filter_out_year_below: -1
+    filter_out_year_above: 1756
+    sequence: 6
+    description: "6. Commonwealth - James II"
+filter_out_authors:
+  - "Hume, David (1711-1776)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: 1754
+only_keep_first_author: True
+filter_out_estcids:
+  - "T116228"
+  - "T202126"
+only_keep_authors:

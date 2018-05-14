@@ -1,40 +1,48 @@
 document_ids:
   - id: "0145000201"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1761
     sequence: 1
     description: "1. Anglo-Saxons - Henry II"
   - id: "0145000202"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1761
     sequence: 2
     description: "2. Richard I - Edward III"
   - id: "0145100103"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1761
     sequence: 3
     description: "3. Richard II - Henry VIII(1/2)"
   - id: "0145100104"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1758
     sequence: 4
     description: "4. Henry VIII(2/2) - Mary"
   - id: "0145100105"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1758
     sequence: 5
     description: "5. Elizabeth"
   - id: "0145100106"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1753
     sequence: 6
     description: "6. James I - Charles I(1/2)"
   - id: "0145100107"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1756
     sequence: 7
     description: "7. Charles I(2/2) - The Commonwealth - Charles II(1/2)"
   - id: "0145200108"
+    estcid: "T082472"
     filter_out_year_below: -1
     filter_out_year_above: 1756
     sequence: 8
@@ -49,3 +57,4 @@ only_keep_first_author: True
 filter_out_estcids:
   - "T116228"
   - "T202126"
+only_keep_authors:

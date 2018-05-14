@@ -104,7 +104,6 @@ def get_cluster_list_with_filters(cluster_list,
                                                   author_ignore_id)
         if only_keep_authors is not None:
             results_cluster.only_keep_authors(only_keep_authors)
-
         if len(results_cluster.fragment_list) > 0:
             cluster_list_results.append(results_cluster)
     print("  >> Done!")
@@ -167,7 +166,6 @@ def write_csv_total_fragments_per_author_per_year(plotdata,
                                                   include_date=True):
     if include_date:
         outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
-
     outdir = "output/" + outpath_prefix + "/"
     create_dir_if_not_exists(outdir)
     topx = len(plotdata)
@@ -175,7 +173,6 @@ def write_csv_total_fragments_per_author_per_year(plotdata,
         outdir + "fragments_per_author_per_decade_top" +
         str(topx) +
         ".csv")
-
     with open(outputfile, 'w') as output_csv:
         headerrow = ["decade"]
         authors = []
@@ -201,7 +198,6 @@ def write_csv_total_fragments_per_author(plotdata,
     outdir = "output/" + outpath_prefix + "/"
     create_dir_if_not_exists(outdir)
     outputfile = outdir + "fragments_per_author.csv"
-
     with open(outputfile, 'w') as output_csv:
         headerrow = ["author", "total_fragments", "political_views", "link"]
         headerrow.extend(plotdata[0].get('header_texts'))
@@ -261,7 +257,6 @@ def get_header_plotdata(cluster_list, start_year, headerdata):
 def get_plotdata_politicalview_by_header(cluster_list, headerdata,
                                          author_metadata):
     plotdata = []
-
     for item in headerdata:
         plotdata_index = item.get('index')
         plotdata_header = item.get('header_text')
@@ -272,7 +267,6 @@ def get_plotdata_politicalview_by_header(cluster_list, headerdata,
         tory = 0
         unionist = 0
         no_record = 0
-
         for cluster in cluster_list:
             if cluster.group_id == plotdata_index:
                 cluster_affiliations = cluster.get_political_affiliations(
@@ -284,7 +278,6 @@ def get_plotdata_politicalview_by_header(cluster_list, headerdata,
                 tory += cluster_affiliations.get('tory')
                 unionist += cluster_affiliations.get('unionist')
                 no_record += cluster_affiliations.get('no_record')
-
         plotdata.append({
             'index': plotdata_index,
             'header': plotdata_header,
@@ -299,13 +292,11 @@ def get_plotdata_politicalview_by_header(cluster_list, headerdata,
             'tory_wide': (tory + royalist + jacobite),
             'others_wide': (no_record + unionist),
             })
-
     return plotdata
 
 
 def get_plotdata_country_by_header(cluster_list, headerdata):
     plotdata = []
-
     for item in headerdata:
         plotdata_index = item.get('index')
         plotdata_header = item.get('header_text')
@@ -314,7 +305,6 @@ def get_plotdata_country_by_header(cluster_list, headerdata):
         scotland = 0
         ireland = 0
         others = 0
-
         for cluster in cluster_list:
             if cluster.group_id == plotdata_index:
                 cluster_countries = cluster.get_countries()
@@ -323,7 +313,6 @@ def get_plotdata_country_by_header(cluster_list, headerdata):
                 scotland += cluster_countries.get('Scotland')
                 ireland += cluster_countries.get('Ireland')
                 others += cluster_countries.get('Others')
-
         plotdata.append({
             'index': plotdata_index,
             'header': plotdata_header,
@@ -333,7 +322,6 @@ def get_plotdata_country_by_header(cluster_list, headerdata):
             'Ireland': ireland,
             'Others': others,
             })
-
     return plotdata
 
 
@@ -342,11 +330,9 @@ def write_header_plotdata_csv(header_plotdata,
                               include_date=True):
     if include_date:
         outpath_prefix = get_outpath_prefix_with_date(outpath_prefix)
-
     outdir = "output/" + outpath_prefix + "/"
     create_dir_if_not_exists(outdir)
     outputfile = outdir + "header_plotdata.csv"
-
     with open(outputfile, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         indices = header_plotdata[0].get('indices')
@@ -379,9 +365,7 @@ def cluster_list_remove_duplicates(cluster_list, filter_author_ref=False):
             cluster.filter_non_unique_seed_uids(used_seed_uids))
         if len(cluster.fragment_list) > 0:
             new_cluster_list.append(cluster)
-
     retlist = new_cluster_list
-
     if filter_author_ref:
         used_seed_author_uids = set()
         author_cluster_list = []
@@ -392,7 +376,6 @@ def cluster_list_remove_duplicates(cluster_list, filter_author_ref=False):
             if len(cluster.fragment_list) > 0:
                 author_cluster_list.append(cluster)
         retlist = author_cluster_list
-
     end_fragments = 0
     for cluster in retlist:
         end_fragments += cluster.get_length()
@@ -461,10 +444,14 @@ for document_id_dict in document_ids:
     }
 
     headerdata = get_headers_for_document_id(document_id, document_text)
+    print("> Fetching clusterIDs ...")
     cluster_ids = cluster_api_client.get_cluster_ids_list_for_document_id(
         document_id)
+    print("  >> Done!")
+    print("> Getting cluster data ...")
     cluster_data = cluster_api_client.get_cluster_data_for_cluster_id_list(
         cluster_ids)
+    print("  >> Done!")
     # cluster_data = cluster_api_client.get_wide_cluster_data_for_document_id(
     #     document_id)
 
@@ -485,7 +472,7 @@ for document_id_dict in document_ids:
     document_data['splitjoined_ascii'] = (doctext_splitjoined_ascii)
 
     fragment_list = FragmentList(cluster_data, seed_docid=document_id)
-    fragment_list.add_metadata(author_metadata)
+    fragment_list.add_metadata(author_metadata, good_metadata=good_metadata)
     fragment_list.add_headerdata(headerdata, document_id)
 
     # remove after update!

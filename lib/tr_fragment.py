@@ -14,6 +14,7 @@ from lib.text_reuse_common import (
     get_title_from_estc,
     get_author_bd_from_estc,
     get_country_from_estc,
+    get_first_ed_year_guess_from_estc
     )
 
 
@@ -22,7 +23,8 @@ class TextReuseFragment(object):
     def __init__(self, ecco_id, cluster_id,
                  text, start_index, end_index):
         self.estc_id = None
-        self.ecco_id = ecco_id
+        # self.ecco_id = ecco_id
+        self.ecco_id = self.__get_proper_ecco_id(ecco_id)
         self.cluster_id = cluster_id
         self.title = None
         self.author = None
@@ -56,6 +58,13 @@ class TextReuseFragment(object):
         self.seed_uid_simple_author = None
         self.first_ed_year_guess = None
 
+    def __get_proper_ecco_id(self, ecco_id):
+        if ecco_id[0] == 'A':
+            ecco_id = "10" + ecco_id[1:len(ecco_id)]
+        elif ecco_id[0] == 'B':
+            ecco_id = "11" + ecco_id[1:len(ecco_id)]
+        return ecco_id
+
     def set_seed_data(self, seed_data):
         self.seed_document_id = seed_data.get('seed_document_id')
         self.seed_header_id = seed_data.get('seed_header_id')
@@ -74,6 +83,7 @@ class TextReuseFragment(object):
             str(round(self.seed_header_start_index / 100)))
 
     def add_metadata(self, good_metadata, author_metadata):
+        # print(self.ecco_id)
         self.location = get_location_from_estc(
             self.ecco_id, good_metadata)
         self.country = get_country_from_estc(
@@ -89,8 +99,11 @@ class TextReuseFragment(object):
         bd = get_author_bd_from_estc(self.ecco_id, good_metadata)
         self.author_birth = bd.get('birth')
         self.author_death = bd.get('death')
-        self.first_ed_year_guess = (
-            self.__get_guessed_first_ed_year())
+        self.first_ed_year_guess = get_first_ed_year_guess_from_estc(
+            self.ecco_id, good_metadata)
+        if self.first_ed_year_guess is None:
+            self.first_ed_year_guess = (
+                self.__get_guessed_first_ed_year())
         self.author_politics = (
             self.get_author_political_affiliation(author_metadata))
 

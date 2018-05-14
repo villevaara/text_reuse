@@ -1,0 +1,26 @@
+document_ids:
+  - id: "1679000101"
+    filter_out_year_below: -1
+    filter_out_year_above: 1743
+    description: "1. Julius Caesar - Edward III"
+    sequence: 1
+  # - id: "1679100103"
+  #   filter_out_year_below: -1
+  #   filter_out_year_above: 1750
+  #   description: "3. Edward VI - Elizabeth"
+  #   sequence: 3
+  # - id: "1679100104"
+  #   filter_out_year_below: -1
+  #   filter_out_year_above: 1750
+  #   description: "4. History of English Church (Henry VI - Elizabeth), James - Charles I - republic of England"
+  #   sequence: 4
+filter_out_authors:
+  - "Guthrie, William (1708-1770)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: False
+filter_out_estcids:
+  -
+only_keep_authors:

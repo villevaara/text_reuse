@@ -6,9 +6,13 @@ from time import sleep
 class OctavoAPIClient(object):
 
     def __init__(self,
-                 api_base_address="https://vm0824.kaj.pouta.csc.fi/octavo",
+                 # username,
+                 # password,
+                 api_base_address="https://hume:bacon@vm0824.kaj.pouta.csc.fi/octavo",
                  limit=100,
                  timeout=300):
+        # self.username = username
+        # self.password = password
         self.api_base_address = api_base_address
         self.limit = limit
         self.timeout = timeout
@@ -81,11 +85,11 @@ class OctavoEccoClusterClient(OctavoAPIClient):
         super().__init__(limit=limit, timeout=timeout)
         self.api_request_start = (
             self.api_base_address +
-            "/eccocluster" +
+            "/reuse" +
             "/search?query=")
         self.api_post_request_uri = (
             self.api_base_address +
-            "/eccocluster" +
+            "/reuse" +
             "/search")
 
     def get_cluster_data_for_document_id_url(self,
@@ -107,7 +111,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
                                          document_id,
                                          fields=["documentID",
                                                  # "title",
-                                                 "clusterID",
+                                                 "fragmentID",
                                                  "startIndex",
                                                  "endIndex",
                                                  "avgLength",
@@ -121,13 +125,13 @@ class OctavoEccoClusterClient(OctavoAPIClient):
 
     def get_cluster_ids_list_for_document_id(self,
                                              document_id,
-                                             fields=["clusterID"]):
+                                             fields=["fragmentID"]):
         fields_part = self.get_fields_request_part(fields)
         api_request = (
             self.api_request_start +
-            "<CLUSTER§documentID:" +
+            "<REUSE§documentID:" +
             str(document_id) +
-            "§CLUSTER>" +
+            "§REUSE>" +
             fields_part +
             self.limit_timeout_part)
         self.announce_query(api_request)
@@ -135,17 +139,17 @@ class OctavoEccoClusterClient(OctavoAPIClient):
         data = response_json.get('results').get('docs')
         cluster_ids = []
         for entry in data:
-            cluster_ids.append(str(entry.get('clusterID')))
+            cluster_ids.append(str(entry.get('fragmentID')))
         return cluster_ids
 
     def get_cluster_data_for_cluster_id_list(self,
                                              cluster_id_list,
                                              fields=["documentID",
-                                                     "clusterID",
+                                                     "fragmentID",
                                                      "startIndex",
                                                      "endIndex",
                                                      "text"]):
-        print(" > " + str(len(cluster_id_list)) + " clusterIDs in total")
+        print(" > " + str(len(cluster_id_list)) + " fragmentIDs in total")
         print(" > slicing list into 1000 item parts")
         cluster_id_groups = []
         for i in range(0, len(cluster_id_list), 1000):
@@ -160,7 +164,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
         for cluster_id_group in cluster_id_groups:
             cluster_id_string = (
                 ' OR '.join(cluster_id_group))
-            cluster_id_part = "clusterID:(" + cluster_id_string + ")"
+            cluster_id_part = "fragmentID:(" + cluster_id_string + ")"
             api_post_request_data = {'query': cluster_id_part,
                                      'field': fields,
                                      'limit': self.limit,
@@ -177,7 +181,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
                                               document_id,
                                               fields=["documentID",
                                                       # "title",
-                                                      "clusterID",
+                                                      "fragmentID",
                                                       "startIndex",
                                                       "endIndex",
                                                       "text"]):
@@ -186,9 +190,9 @@ class OctavoEccoClusterClient(OctavoAPIClient):
 
         api_request = (
             self.api_request_start +
-            "<CLUSTER§<CLUSTER§documentID:" +
+            "<REUSE<REUSE§documentID:" +
             str(document_id) +
-            "§clusterID>§CLUSTER>" +
+            "§fragmentID>§REUSE>" +
             fields_part +
             self.limit_timeout_part)
 

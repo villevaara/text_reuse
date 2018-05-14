@@ -1,0 +1,26 @@
+document_ids:
+  - id: "0289400101"
+    filter_out_year_below: -1
+    filter_out_year_above: 1782
+    sequence: 1
+    description: "Vol 1"
+  - id: "0289400102"
+    filter_out_year_below: -1
+    filter_out_year_above: 1782
+    sequence: 2
+    description: "Vol 2"
+  - id: "0289400103"
+    filter_out_year_below: -1
+    filter_out_year_above: 1782
+    sequence: 3
+    description: "Vol 3"
+filter_out_authors:
+  - "Ferguson, Adam (1723-1816)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: False
+filter_out_estcids:
+  -
+only_keep_authors:
