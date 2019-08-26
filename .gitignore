@@ -2,15 +2,11 @@ data/*
 !data/eccoids/
 output/
 venv/
-_venv35/
-venv-old/
 *.gz
 __pycache__/
 meta_clusters.*
 *.db
 .~*
-plans/
-gephi/
 *.csv
 *.sublime*
 webdata/
