@@ -16,7 +16,7 @@ from lib.fragmentlists import (
     FragmentList)
 
 from lib.utils_common import create_dir_if_not_exists
-from lib.headerdata_dump_common import read_docid_asciimap_csv
+# from lib.headerdata_dump_common import read_docid_asciimap_csv
 
 # usage:
 # $ python indexdata_dump.py --inputfile ecco1_ids1.csv
@@ -94,7 +94,7 @@ def get_start_params(argv):
 # read input parameters
 inputfile = get_start_params(sys.argv[1:])
 outputprefix = inputfile[:-4]
-outputpath = 'output/octavo_indices/' + outputprefix + '/'
+outputpath = '../../output/work/octavo_indices/' + outputprefix + '/'
 create_dir_if_not_exists(outputpath)
 
 # setup api clients
@@ -108,7 +108,7 @@ field_eccocluster = ["documentID", "fragmentID", "text",
 
 # read ids to process
 ids_to_process = set()
-add_csv_ids_to_set('data/eccoids/' + inputfile, ids_to_process)
+add_csv_ids_to_set('cfg/indexdata_dump/' + inputfile, ids_to_process)
 
 # prepare log file and list of processed ids
 summary_csv = outputpath + 'summary.csv'
@@ -116,8 +116,7 @@ prepare_summary_csv(summary_csv)
 
 # get processed ids from summary.
 processed_ids = read_processed_ids_from_results_csv(summary_csv)
-docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
-
+# docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
 
 # iterate document ids. Main loop
 for docid in ids_to_process:

@@ -596,7 +596,9 @@ for document_id_dict in document_ids:
         write_header_plotdata_csv(header_plotdata,
                                   outpath_prefix)
 
-    log_writer.write_log(outpath_prefix + " finished succesfully")
+    log_writer.write_log(
+        outpath_prefix + " finished succesfully",
+        logdir="./documentation/logs")
 
 
 create_csv_summaries(outpath_with_date, documents_meta_dict)
