@@ -1,3 +1,0 @@
-NEW:
-----------
-python tr_get_headerdata.py --cfg hume2.yml
