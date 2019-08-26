@@ -12,10 +12,10 @@ meta_clusters.*
 plans/
 gephi/
 *.csv
-code_legacy/
 *.sublime*
 webdata/
 docs/
 temp/
 work/
+!code/work/
 logs/

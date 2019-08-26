@@ -1,0 +1,282 @@
+import csv
+import os.path
+import sys
+import getopt
+from time import sleep
+from timeit import default_timer as timer
+import json
+
+from lib.octavo_api_client import (
+    OctavoEccoClient,
+    OctavoEccoClusterClient
+    )
+
+from lib.fragmentlists import (
+    get_fragmentlist,
+    get_doctext_indexmap,
+    test_fragment_text,
+    get_validated_fragmentlist)
+
+from lib.utils_common import create_dir_if_not_exists
+from lib.headerdata_dump_common import read_docid_asciimap_csv
+from lib.additional_cluster_data import read_datadir_add_clusterdata
+
+
+# def filter_add_cludata_with_docid(add_cludata, docid):
+#     filtered_list = []
+#     for datapoint in add_cludata:
+#         if datapoint.get('documentID') == docid:
+#             filtered_list.append(datapoint)
+#     return filtered_list
+
+
+# def get_docid_fragments(docid_to_process, cluster_api_client, ecco_api_client,
+#                         field_eccocluster, docids_asciimap,
+#                         additional_cluster_data=None):
+#     docid_clusterdata = (
+#         cluster_api_client.get_cluster_data_for_document_id(
+#             docid_to_process, fields=field_eccocluster))
+#     if additional_cluster_data is not None:
+#         relevant_add_cludata = filter_add_cludata_with_docid(
+#             additional_cluster_data, docid_to_process)
+#         docid_clusterdata.extend(relevant_add_cludata)
+#     docid_fulltext_data = ecco_api_client.get_text_for_document_id(
+#         docid_to_process)
+#     docid_fulltext_text = docid_fulltext_data.get('text')
+#     docid_ascii = docids_asciimap.get(docid_to_process)
+#     docid_indexmap_ascii = get_doctext_indexmap(
+#         orig_text=docid_fulltext_text, method_ascii=True)
+#     docid_indexmap_unicode = get_doctext_indexmap(
+#         orig_text=docid_fulltext_text, method_ascii=False)
+#     docid_fragments = get_fragmentlist(docid_clusterdata,
+#                                        docid_fulltext_data,
+#                                        docid_indexmap_ascii,
+#                                        docid_indexmap_unicode,
+#                                        docid_is_ascii=docid_ascii)
+#     # revalidate and discard those that do not validate
+#     return docid_fragments
+
+
+# def get_validated_fragmentlist(fragmentlist, ecco_api_client, docid):
+#     validated_fraglist = []
+#     docid_fulltext_data = ecco_api_client.get_text_for_document_id(docid)
+#     print("validating fragdata")
+#     for fragment in fragmentlist:
+#         # api_text_slice = docid_fulltext_data.get('text')[
+#         #     fragment.octavo_start_index:fragment.octavo_end_index]
+#         frag_validation = (
+#             test_fragment_text(fragment, docid_fulltext_data.get('text')))
+#         if frag_validation:
+#             validated_fraglist.append(fragment)
+#         else:
+#             print("a fragment did not validate. ?!")
+#             print("fragment_id: " + str(fragment.cluster_id))
+#             print("ecco_id:     " + str(fragment.ecco_id))
+#     return validated_fraglist
+
+
+def get_cluster_id_set(docid_fragments):
+    cluster_id_set = set()
+    for fragment in docid_fragments:
+        cluster_id_set.add(fragment.cluster_id)
+    return cluster_id_set
+
+
+def get_volumes_fragment_dict(edition_ecco_ids, field_eccocluster,
+                              add_cludata=None):
+    volumes_fragment_dict = {}
+    for docid in edition_ecco_ids:
+        docid_fragments = get_docid_fragments(docid, field_eccocluster,
+                                              add_cludata)
+        docid_fragments_validated = get_validated_fragmentlist(docid_fragments,
+                                                               docid)
+        volumes_fragment_dict[docid] = docid_fragments_validated
+    return volumes_fragment_dict
+
+
+def get_edition_cluster_ids(edition_fragments_dict):
+    edition_cluster_ids = set()
+    for key, value in edition_fragments_dict.items():
+        # key = ecco_id, value = fragment list
+        volume_cluster_ids = get_cluster_id_set(value)
+        edition_cluster_ids.update(volume_cluster_ids)
+    return edition_cluster_ids
+
+
+def get_shared_fragments(fragment_dict_to_limit, fragment_dict_to_limit_with):
+    return_cluster_ids = get_edition_cluster_ids(fragment_dict_to_limit)
+    limiting_cluster_ids = get_edition_cluster_ids(
+        fragment_dict_to_limit_with)
+    shared_cluster_ids = return_cluster_ids.intersection(limiting_cluster_ids)
+    ret_fragment_dict = {}
+    for key, fragmentlist in fragment_dict_to_limit.items():
+        filtered_fraglist = []
+        for fragment in fragmentlist:
+            if fragment.cluster_id in shared_cluster_ids:
+                filtered_fraglist.append(fragment)
+        ret_fragment_dict[key] = filtered_fraglist
+    return ret_fragment_dict
+
+
+def get_volume_shared_charmap(docid, volume_fraglist, ecco_api_client):
+    docid_fulltext_data = ecco_api_client.get_text_for_document_id(docid)
+    docid_fulltext_text = docid_fulltext_data.get('text')
+    fulltext_charcount = len(docid_fulltext_text)
+    char_inds = list(range(0, (len(docid_fulltext_text) - 1)))
+    # initialize charamp as empty
+    charmap = {}
+    for char_ind in char_inds:
+        charmap[char_ind] = False
+    # create set of char inds included in fragment indices
+    shared_char_inds = set()
+    for fragment in volume_fraglist:
+        if fragment.octavo_start_index == -1 | fragment.octavo_end_index == -1:
+            print("woot, wtf! there shouldn't be this kind of octavo indices")
+        fragment_char_inds = set(
+            range(fragment.octavo_start_index, fragment.octavo_end_index))
+        shared_char_inds.update(fragment_char_inds)
+    # update charmap with inds in shared in above set
+    for char_ind in shared_char_inds:
+        charmap[char_ind] = True
+    # count coverage
+    shared_chars_count = 0
+    for char_ind in charmap.keys():
+        if charmap[char_ind]:
+            shared_chars_count += 1
+    # create a rough highlighted version of fulltext
+    text_projection_list = []
+    for char_ind in char_inds:
+        if charmap[char_ind]:
+            text_projection_list.append(docid_fulltext_text[char_ind])
+        else:
+            text_projection_list.append(docid_fulltext_text[char_ind].upper())
+    text_projection = "".join(text_projection_list)
+    return {
+        'docid': docid,
+        'doctext': docid_fulltext_text,
+        'charmap': charmap,
+        'fulltext_charcount': fulltext_charcount,
+        'shared_charcount': shared_chars_count,
+        'shared_ratio': (shared_chars_count / fulltext_charcount),
+        'text_projection': text_projection
+    }
+
+
+def get_edition_char_dicts(edition_shared_frag_dict, ecco_api_client):
+    docids = list(edition_shared_frag_dict.keys())
+    edition_char_dicts = {}
+    for docid in docids:
+        vol_shared_chars = get_volume_shared_charmap(
+            docid,
+            edition_shared_frag_dict[docid],
+            ecco_api_client)
+        edition_char_dicts[docid] = vol_shared_chars
+    return edition_char_dicts
+
+
+ecco_api_client = OctavoEccoClient()
+cluster_api_client = OctavoEccoClusterClient(timeout=600)
+
+docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
+
+fields_ecco = ["documentID", "content"]
+field_eccocluster = ["documentID", "fragmentID", "text",
+                     "startIndex", "endIndex"]
+
+docids_first = ["0162900301",
+                "0162900302",
+                "0429000101",
+                "0429000102",
+                "0156400400",
+                "0162200200"]
+
+docids_later = ["0145000201",
+                "0145000202",
+                "0145100103",
+                "0145100104",
+                "0145100105",
+                "0145100106",
+                "0145100107",
+                "0145200108"]
+
+
+add_cludatadir = "data/tr_data_additional/14_volumes/"
+add_cludata = read_datadir_add_clusterdata(add_cludatadir)
+
+first_ed_volumes_frag_dict = get_volumes_fragment_dict(
+    docids_first, field_eccocluster, add_cludata)
+first_ed_cluster_ids = get_edition_cluster_ids(first_ed_volumes_frag_dict)
+
+later_ed_volumes_frag_dict = get_volumes_fragment_dict(
+    docids_later, field_eccocluster, add_cludata)
+later_ed_cluster_ids = get_edition_cluster_ids(later_ed_volumes_frag_dict)
+
+
+# ----------------------
+# get char by char data
+# ----------------------
+
+first_ed_shared_frag_dict = get_shared_fragments(
+    first_ed_volumes_frag_dict, later_ed_volumes_frag_dict)
+later_ed_shared_frag_dict = get_shared_fragments(
+    later_ed_volumes_frag_dict, first_ed_volumes_frag_dict)
+
+
+first_ed_shared_char_dicts = get_edition_char_dicts(first_ed_shared_frag_dict,
+                                                    ecco_api_client)
+later_ed_shared_char_dicts = get_edition_char_dicts(later_ed_shared_frag_dict,
+                                                    ecco_api_client)
+
+
+for value in first_ed_shared_char_dicts.values():
+    print(str(value['docid']) + " : " + str(value['shared_ratio']))
+    outfname_hl = ('output/ed_comparison/first_ed/' + str(value['docid']) +
+                   '_highlight.txt')
+    outfname_ft = ('output/ed_comparison/first_ed/' + str(value['docid']) +
+                   '_fulltext.txt')
+    with open(outfname_hl, 'w') as outfile:
+        outfile.write(value['text_projection'])
+    with open(outfname_ft, 'w') as outfile:
+        outfile.write(value['doctext'])
+
+
+for value in later_ed_shared_char_dicts.values():
+    print(str(value['docid']) + " : " + str(value['shared_ratio']))
+    outfname_hl = ('output/ed_comparison/later_ed/' + str(value['docid']) +
+                   '_highlight.txt')
+    outfname_ft = ('output/ed_comparison/later_ed/' + str(value['docid']) +
+                   '_fulltext.txt')
+    with open(outfname_hl, 'w') as outfile:
+        outfile.write(value['text_projection'])
+    with open(outfname_ft, 'w') as outfile:
+        outfile.write(value['doctext'])
+
+
+# --- testing! ---
+# # test fragments in two volumes only
+# # testfrags = get_docid_fragments('0162200200')
+# # volume_cluster_ids = get_cluster_id_set(testfrags)
+# testfrags = first_ed_volumes_frag_dict.get('0162200200')
+# volume_cluster_ids = get_cluster_id_set(testfrags2)
+# clusteridlist = list(volume_cluster_ids)
+# test_set = set(["0145100107", "0162200200"])
+# matching_cluster_ids = []
+# i = 1
+# for cluster_id in clusteridlist:
+#     print(str(i) + "/" + str(len(clusteridlist)))
+#     i += 1
+#     clusters = cluster_api_client.get_cluster_data_for_cluster_id_list([str(cluster_id)])
+#     doc_ids = []
+#     for cluster in clusters:
+#         doc_ids.append(cluster.get('documentID'))
+#     if len(doc_ids) == 2:
+#         print("len 2 found at cluster id : " + str(cluster_id))
+#     if set(doc_ids) == test_set:
+#         print(" !!!!!!!!!1")
+#         print("right docis found at fragmentid: " + str(cluster_id))
+#         print(" !!!!!!!!!1")
+#         matching_cluster_ids.append(cluster_id)
+
+# # matching: [10036219144, 10032040124, 10027977262, 10011532493, 1009705141, 10011108593]
+
+
