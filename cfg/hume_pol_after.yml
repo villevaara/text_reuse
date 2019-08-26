@@ -1,0 +1,17 @@
+document_ids:
+  - id: "0691100800"
+    estcid: "T083618"
+    filter_out_year_below: 1753
+    filter_out_year_above: -1
+    sequence: 1
+    description: "Political discourses. By David Hume Esq."
+filter_out_authors:
+  - "Hume, David (1711-1776)"
+author_ignore_id: ""
+require_first_author: "orig"
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: False
+filter_out_estcids:
+  -
+only_keep_authors:

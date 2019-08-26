@@ -1,0 +1,17 @@
+# sister peg, published 1761, allegedly by Adam Ferguson
+document_ids:
+  - id: "1402701700"
+    estcid: "T214143"
+    filter_out_year_below: -1
+    filter_out_year_above: 1760
+    sequence: 1
+    description: "sister_peg"
+filter_out_authors:
+  -
+author_ignore_id:
+require_first_author:
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: True
+filter_out_estcids:
+only_keep_authors:

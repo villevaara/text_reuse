@@ -10,7 +10,7 @@ class OctavoAPIClient(object):
                  # password,
                  api_base_address="https://hume:bacon@vm0824.kaj.pouta.csc.fi/octavo",
                  limit=100,
-                 timeout=300):
+                 timeout=60):
         # self.username = username
         # self.password = password
         self.api_base_address = api_base_address
@@ -42,7 +42,7 @@ class OctavoAPIClient(object):
                 response = get(api_request)
                 # response = post(api_request)
                 data = response.json()
-                # data = response.json().get('results').get('docs')
+                # data = response.json().get('result').get('docs')
             except ValueError as error:
                 # print(error)
                 print("  !> Request probably timed out or something." +
@@ -81,7 +81,7 @@ class OctavoAPIClient(object):
 
 class OctavoEccoClusterClient(OctavoAPIClient):
 
-    def __init__(self, limit=-1, timeout=300):
+    def __init__(self, limit=-1, timeout=60):
         super().__init__(limit=limit, timeout=timeout)
         self.api_request_start = (
             self.api_base_address +
@@ -120,7 +120,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
             document_id, fields)
         self.announce_query(api_request)
         response_json = self.get_api_response(api_request)
-        data = response_json.get('results').get('docs')
+        data = response_json.get('result').get('docs')
         return data
 
     def get_cluster_ids_list_for_document_id(self,
@@ -136,7 +136,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
             self.limit_timeout_part)
         self.announce_query(api_request)
         response_json = self.get_api_response(api_request)
-        data = response_json.get('results').get('docs')
+        data = response_json.get('result').get('docs')
         cluster_ids = []
         for entry in data:
             cluster_ids.append(str(entry.get('fragmentID')))
@@ -150,12 +150,12 @@ class OctavoEccoClusterClient(OctavoAPIClient):
                                                      "endIndex",
                                                      "text"]):
         print(" > " + str(len(cluster_id_list)) + " fragmentIDs in total")
-        print(" > slicing list into 1000 item parts")
+        print(" > slicing list into 200 item parts")
         cluster_id_groups = []
-        for i in range(0, len(cluster_id_list), 1000):
+        for i in range(0, len(cluster_id_list), 200):
             slice_start = i
-            if i + 1000 <= len(cluster_id_list):
-                slice_end = i + 1000
+            if i + 200 <= len(cluster_id_list):
+                slice_end = i + 200
             else:
                 slice_end = len(cluster_id_list)
             cluster_id_groups.append(cluster_id_list[slice_start:slice_end])
@@ -173,7 +173,7 @@ class OctavoEccoClusterClient(OctavoAPIClient):
             response_json = self.post_api_response(self.api_post_request_uri,
                                                    api_post_request_data,
                                                    max_retries=40)
-            response_data = response_json.get('results').get('docs')
+            response_data = response_json.get('result').get('docs')
             all_data.extend(response_data)
         return all_data
 
@@ -198,14 +198,39 @@ class OctavoEccoClusterClient(OctavoAPIClient):
 
         self.announce_query(api_request)
         # response = get(api_request)
-        # data = response.json().get('results').get('docs')
-        data = self.get_api_response(api_request).get('results').get('docs')
+        # data = response.json().get('result').get('docs')
+        data = self.get_api_response(api_request).get('result').get('docs')
         return data
+
+
+class OctavoEeboClient(OctavoAPIClient):
+
+    def __init__(self, limit=-1, timeout=60):
+        super().__init__(limit=limit, timeout=timeout)
+        self.api_request_start = (
+            self.api_base_address +
+            "/eebo" +
+            "/search?query=")
+
+    def get_text_for_document_id(self, document_id):
+        api_request = (self.api_request_start +
+                       "<DOCUMENT§documentID:" +
+                       str(document_id) +
+                       "§DOCUMENT>&field=content&field=collectionID" +
+                       self.limit_timeout_part)
+
+        self.announce_query(api_request)
+        response_json = self.get_api_response(api_request)
+        text = response_json.get('results').get('docs')[0].get('content')
+        collection = (
+            response_json.get('results').get('docs')[0].get('collectionID'))
+        retdict = {'text': text, 'collection': collection}
+        return retdict
 
 
 class OctavoEccoClient(OctavoAPIClient):
 
-    def __init__(self, limit=-1, timeout=300):
+    def __init__(self, limit=-1, timeout=60):
         super().__init__(limit=limit, timeout=timeout)
         self.api_request_start = (
             self.api_base_address +
@@ -230,6 +255,54 @@ class OctavoEccoClient(OctavoAPIClient):
         retdict = {'text': text, 'collection': collection}
         return retdict
 
+    def get_estc_id_metadata(self, estc_id):
+        fields = [
+            "author",
+            "totalPages",
+            "module",
+            "documentLength",
+            "dateStart",
+            "ESTCID",
+            "collectionID",
+            "system_control_number",
+            "fullTitle",
+            "documentID"
+        ]
+        fields_part = self.get_fields_request_part(fields)
+        api_request = (self.api_request_start +
+                       "<DOCUMENT§ESTCID:" +
+                       str(estc_id) +
+                       "§DOCUMENT>" +
+                       fields_part +
+                       self.limit_timeout_part)
+        self.announce_query(api_request)
+        data = self.get_api_response(api_request).get('results').get('docs')
+        return data
+
+    def get_document_id_metadata(self, document_id):
+        fields = [
+            "author",
+            "totalPages",
+            "module",
+            "documentLength",
+            "dateStart",
+            "ESTCID",
+            "collectionID",
+            "system_control_number",
+            "fullTitle",
+            "documentID"
+        ]
+        fields_part = self.get_fields_request_part(fields)
+        api_request = (self.api_request_start +
+                       "<DOCUMENT§documentID:" +
+                       str(document_id) +
+                       "§DOCUMENT>" +
+                       fields_part +
+                       self.limit_timeout_part)
+        self.announce_query(api_request)
+        data = self.get_api_response(api_request).get('results').get('docs')
+        return data
+
     def get_documents_by_length(self, length, operator, fields):
         if operator == "<":
             length_part = "documentLength:" + "[0 TO " + str(length - 1) + "]"
@@ -248,6 +321,6 @@ class OctavoEccoClient(OctavoAPIClient):
 
         self.announce_query(api_request)
         # response = get(api_request)
-        # data = response.json().get('results').get('docs')
+        # data = response.json().get('result').get('docs')
         data = self.get_api_response(api_request).get('results').get('docs')
         return data

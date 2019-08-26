@@ -10,12 +10,15 @@ def get_headers_from_document_text(document_text):
     for match in re.finditer('\n\n# ', document_text):
         header_indices.append(match.start())
     for index in header_indices:
-        from_header = document_text[index + 4:]  # 3:]
-        newline_position = from_header.find('\n')
-        header_text = (from_header[0:newline_position]).strip()
+        # from_header = document_text[index + 4:]  # 3:]
+        full_header = document_text[index:]
+        newline_position = full_header[4:].find('\n') + 4
+        full_header_text = full_header[0:newline_position]
+        header_text = full_header_text[4:].strip()
         # leave the \n\n# plus whitespace from the header text
         header_index_and_text.append({'index': index,
-                                      'header_text': header_text})
+                                      'header_text': header_text,
+                                      'full_header_text': full_header_text})
     return header_index_and_text
 
 

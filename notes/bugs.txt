@@ -1,0 +1,8 @@
+https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search?query=%3CDOCUMENT%C2%A7documentID:1679100104%C2%A7DOCUMENT%3E&field=documentID&field=ESTCID&field=fullTitle&limit=10&timeout=600&pretty&field=content
+
+search for: "\n\n# "
+
+gives \n\n# cital to the public expence. 
+as header
+
+-> count first char also? Only accpet as header if [A-Z0-9] ?

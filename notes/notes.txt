@@ -1,0 +1,75 @@
+metadata csv needs:
+author estcid eccoid title publication_year 
+
+* ne kirjat joiden välillä vahvin yhteys, ts
+eniten klustereita
+
+* yhdistä estc metadata
+
+* esiintymät ennen tekstin ekaa varsinaista esiintymistä
+
+* kuinka kokoomateokset pois? theory of moral sentiments student's miscellanyssä
+
+
+
+Gramsey Chevalier
+(Andrew Michael)
+Puffendorf
+Locke John
+Mandeville
+
+
+* hume ei näkynyt spectator -listassa?
+
+* mistä kaikkialta kokoomateoksiin päätynyt tavaraa
+
+* teosjoukot joilla paljon keskinäisriippuvuuksia
+
+
+settien laskeminen:
+1. tee setit / cluskteri:
+    settti(estcid:t) & clusterin_id
+2. summaa identtiset setit
+	setti(estcid:t) + (clucterid:t) + settien määrä
+	* tai tarkista settejä tehdessä onko jo olemassa, ja jos on niin lisää clusterid
+3. tarkista onko pienempi setti jonkun isomman setin subet
+	* jos kyllä niin lisää estcid & määrää
+	* http://stackoverflow.com/questions/2765892/python-see-if-one-set-contains-another-entirely
+
+
+--------------
+
+pöhinä
+1, 5, 10, 50
+
+1. hae teos + vuosi
+2. hae clusterit joissa teos nuorin
+3. etsi muiden teosten määrä noissa klustereissä, ehdoin:
+    * tekijä != kuin teoksen
+    * vuosi =max +1, +5, +10, +50
+4. tee taulu jossa teoksen pöhisyys ilmaistu:
+    ESTCID, +1, +5, +10, +50
+    
+    ehkä taulu jossa pöhinäteokset linkitetty.
+    ESTCID, +1pöhinä_ESTCID:t
+    - tää tieto muissa tauluissa jo valmiiks?
+    - tähänkö nyt indeksi vai?
+
+
+-----------------
+subset -taulut:
+
+ESTCID, subsettag
+
+
+bayle, viittaukset:
+-------------------
+
+ESTCID, Title, Pub_year, Author, number of references, clusterids (list)
+
+Bayle first. ESTCID Baylen. 
+
+dictionary 1734:
+T143096
+
+Samuel Johnson. Merkittävä kriitikko, mihin tarttui Baylessä. Muut krritikot -> debatoiduimmat kohdat.

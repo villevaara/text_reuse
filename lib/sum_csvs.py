@@ -1,6 +1,10 @@
 import csv
 from glob import glob
 from lib.author_metadata import read_author_metadata_csv
+from lib.utils_common import (
+    get_current_date_string,
+    create_dir_if_not_exists
+    )
 
 
 def add_to_author_totals(author_totals, filename):
@@ -39,6 +43,7 @@ def add_filename_to_totals(outfilename, filename,
 def create_csv_summaries(outputpath, documents_meta_dict):
 
     # def get_filenamesums(filename):
+    create_dir_if_not_exists(outputpath)
     current_subdirs = glob(outputpath + "*/")
     filenames = []
 

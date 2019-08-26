@@ -17,6 +17,8 @@ def get_plotdata_fragments_per_year(cluster_list,
     # filter not found years
     all_years_list = [x for x in all_years_list if x != 9999]
     # get first and last year of all clusters
+    if len(all_years_list) < 1:
+        return {'x': [-1], 'y': [-1]}
     if start_year == -1:
         start_year = min(all_years_list)
     if end_year == -1:
@@ -85,6 +87,14 @@ def get_plotdata_fragments_per_author_per_year(cluster_list,
     # filter not found years
     all_years_list = [x for x in all_years_list if x != 9999]
     # get first and last year of all clusters
+    if len(all_years_list) < 1:
+        return [{'years': "NA",
+                 'fragments': "NA",
+                 'total': "NA",
+                 'author': "NA",
+                 'header_inds': "NA",
+                 'header_texts': "NA",
+                 'header_hits': "NA"}]
     if start_year == -1:
         start_year = min(all_years_list)
     if end_year == -1:
@@ -131,7 +141,8 @@ def get_plotdata_fragments_per_author_per_year(cluster_list,
         for year in years_x:
             author_frags_y.append(author_years.count(year))
             #
-        author_dict = {'years': years_x, 'fragments': author_frags_y,
+        author_dict = {'years': years_x,
+                       'fragments': author_frags_y,
                        'total': author_hits_total,
                        'author': author,
                        'header_inds': header_inds,

@@ -1,0 +1,9 @@
+doc: 0957100200 frag: 176072720 not found with string search.
+doc: 0957100200 frag: 176072720 not found with header strip search either.
+doc: 0957100200 frag: 177445160 not found with string search.
+doc: 0957100200 frag: 177445160 not found with header strip search either.
+doc: 0957100200 frag: 178423010 not found with string search.
+doc: 0957100200 frag: 178423010 not found with header strip search either.
+doc: 0957100200 frag: 180553150 not found with string search.
+doc: 0957100200 frag: 180553150 not found with header strip search either.
+doc: 0957100200 frag: 189695120 not found with string search.

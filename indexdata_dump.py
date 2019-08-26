@@ -11,8 +11,9 @@ from lib.octavo_api_client import (
     )
 
 from lib.fragmentlists import (
-    get_fragmentlist,
-    get_doctext_indexmap)
+    # get_fragmentlist,
+    # get_doctext_indexmap,
+    FragmentList)
 
 from lib.utils_common import create_dir_if_not_exists
 from lib.headerdata_dump_common import read_docid_asciimap_csv
@@ -39,13 +40,15 @@ def read_processed_ids_from_results_csv(results_csv):
     return processed_ids
 
 
-def write_summary_row(docid, fragments_total, time_taken, summary_csv):
-        with open(summary_csv, 'a') as csvfile:
-            csvwriter = csv.writer(csvfile)
-            csvwriter.writerow([docid,
-                                fragments_total,
-                                time_taken])
-            print("docid: " + docid + ' summary written.')
+def write_summary_row(
+        docid, fragments_total, fragments_not_found, time_taken, summary_csv):
+    with open(summary_csv, 'a') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow([docid,
+                            fragments_total,
+                            fragments_not_found,
+                            time_taken])
+        print("docid: " + docid + ' summary written.')
 
 
 def write_results_csv_header(results_csv):
@@ -54,10 +57,12 @@ def write_results_csv_header(results_csv):
         with open(results_csv, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(['document_id',
-                                'cluster_id',
-                                'api_start_index',
-                                'octavo_start_index',
-                                'octavo_end_index'])
+                                'fragment_id',
+                                'new_start_index',
+                                'new_end_index',
+                                'old_start_index',
+                                'old_end_index',
+                                'validates'])
 
 
 def prepare_summary_csv(summary_csv):
@@ -67,6 +72,7 @@ def prepare_summary_csv(summary_csv):
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(['document_id',
                                 'fragments_total',
+                                'fragments_not_found',
                                 'time_taken_s'])
 
 
@@ -85,22 +91,26 @@ def get_start_params(argv):
     return inputfile
 
 
+# read input parameters
 inputfile = get_start_params(sys.argv[1:])
 outputprefix = inputfile[:-4]
 outputpath = 'output/octavo_indices/' + outputprefix + '/'
 create_dir_if_not_exists(outputpath)
 
+# setup api clients
 ecco_api_client = OctavoEccoClient()
-cluster_api_client = OctavoEccoClusterClient(timeout=600)
+cluster_api_client = OctavoEccoClusterClient(timeout=60)
+
 
 fields_ecco = ["documentID", "content"]
-field_eccocluster = ["documentID", "clusterID", "text",
+field_eccocluster = ["documentID", "fragmentID", "text",
                      "startIndex", "endIndex"]
 
+# read ids to process
 ids_to_process = set()
-
 add_csv_ids_to_set('data/eccoids/' + inputfile, ids_to_process)
 
+# prepare log file and list of processed ids
 summary_csv = outputpath + 'summary.csv'
 prepare_summary_csv(summary_csv)
 
@@ -108,12 +118,12 @@ prepare_summary_csv(summary_csv)
 processed_ids = read_processed_ids_from_results_csv(summary_csv)
 docids_asciimap = read_docid_asciimap_csv('data/eccoids/asciilines.csv')
 
-# skip already processed ids
 
+# iterate document ids. Main loop
 for docid in ids_to_process:
-
     docid_to_process = docid
 
+    # skip already processed ids
     if docid_to_process in processed_ids:
         print("  !> docid " + docid_to_process + " already processed." +
               " Skipping.")
@@ -141,47 +151,37 @@ for docid in ids_to_process:
             break
 
     # we should have the good response now. Yay
+    # grab document text octavo API version
     docid_fulltext_data = ecco_api_client.get_text_for_document_id(docid)
     docid_fulltext_text = docid_fulltext_data.get('text')
 
     # Exactly 1 id is missing from the clusterdata. Go figure.
     if docid == "1563300700":
-        docid_ascii = None
-    else:
-        docid_ascii = docids_asciimap.get(docid)
+        print("Does this break?")
 
-    docid_indexmap_ascii = get_doctext_indexmap(
-        orig_text=docid_fulltext_text, method_ascii=True)
-    docid_indexmap_unicode = get_doctext_indexmap(
-        orig_text=docid_fulltext_text, method_ascii=False)
-
+    # prepare timer and fragment list
     start = timer()
-    docid_fragments = get_fragmentlist(docid_clusterdata,
-                                       docid_fulltext_data,
-                                       docid_indexmap_ascii,
-                                       docid_indexmap_unicode,
-                                       docid_is_ascii=docid_ascii)
+    fragmentlist = FragmentList(docid_clusterdata)
     end = timer()
     time_taken = round((end - start), 2)
     print("Fragments took " + str(time_taken) + "s")
 
-    docid_fragments_amount = len(docid_fragments)
-
+    # loop fragments, do simple text search for index in octavo text
+    docid_fragments_amount = len(fragmentlist.fragment_list)
+    fragments_not_found = 0
     fragment_results = []
-
-    for fragment in docid_fragments:
-        fragment_data = {'cluster_id': fragment.cluster_id,
-                         'document_id': fragment.ecco_id,
-                         'octavo_start_index': fragment.octavo_start_index,
-                         'octavo_end_index': fragment.octavo_end_index,
-                         'orig_start_index': fragment.start_index
-                         # 'orig_end_index': fragment.end_index,
-                         # 'find_start_index': fragment.find_start_index,
-                         # 'find_end_index': fragment.find_end_index,
-                         # 'encoding': fragment.is_ascii,
-                         # 'fragtext': fragment.text
-                         }
-        fragment_results.append(fragment_data)
+    for fragment in fragmentlist.fragment_list:
+        fragment.set_octavo_index(docid_fulltext_text)
+        if not fragment.octavo_indices_validate:
+            fragments_not_found += 1
+        fragment_results.append({
+            'fragment_id': fragment.fragment_id,
+            'document_id': fragment.ecco_id,
+            'start_index_new': fragment.start_index,
+            'end_index_new': fragment.end_index,
+            'start_index_old': fragment.start_index_fragment_data,
+            'end_index_old': fragment.end_index
+            })
 
     # write results into csv file. first 4 digits docid separate files.
     docid_filepart = docid_to_process[:4]
@@ -195,14 +195,17 @@ for docid in ids_to_process:
         csvwriter = csv.writer(csvfile)
         for result in fragment_results:
             csvwriter.writerow([result.get('document_id'),
-                                result.get('cluster_id'),
-                                result.get('orig_start_index'),
-                                result.get('octavo_start_index'),
-                                result.get('octavo_end_index')])
+                                result.get('fragment_id'),
+                                result.get('start_index_new'),
+                                result.get('end_index_new'),
+                                result.get('start_index_old'),
+                                result.get('end_index_old')
+                                ])
         print("docid: " + docid_to_process + ' results written to ' +
               results_csv)
 
     write_summary_row(docid_to_process, docid_fragments_amount,
+                      fragments_not_found,
                       time_taken, summary_csv)
 
     processed_ids.add(docid_to_process)

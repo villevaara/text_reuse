@@ -1,0 +1,17 @@
+document_ids:
+  - id: "1436500700"
+    estcid: "T051777"
+    filter_out_year_below: -1 
+    filter_out_year_above: 1747
+    sequence: 1
+    description: "A true account of the behaviour and conduct of Archibald Stewart, Esq"
+filter_out_authors:
+  - "Hume, David (1711-1776)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: 1738
+only_keep_first_author: True
+filter_out_estcids:
+  -
+only_keep_authors:

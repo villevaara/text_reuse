@@ -244,13 +244,13 @@ class TextReuseCluster(object):
     def add_cluster_groups(self):
         for fragment in self.fragment_list:
             # Find "seed" document, add metadata
-            if str(fragment.ecco_id) == self.document_id:
+            if str(fragment.ecco_id) == str(self.document_id):
                 self.group_name = fragment.preceding_header
                 self.group_id = fragment.preceding_header_index
-                if fragment.octavo_start_index is None:
+                if fragment.start_index is None:
                     sys.exit("No octavo start index!")
-                self.group_start_index = fragment.octavo_start_index
-                self.group_end_index = fragment.octavo_end_index
+                self.group_start_index = fragment.start_index
+                self.group_end_index = fragment.end_index
                 break
         for fragment in self.fragment_list:
             fragment.set_seed_data(
@@ -259,7 +259,7 @@ class TextReuseCluster(object):
                     'seed_header_id': self.group_id,
                     'seed_header_text': self.group_name,
                     'seed_header_start_index': self.group_start_index,
-                    'seed_header_end_index': self.group_end_index,
+                    'seed_header_end_index': self.group_end_index
                 })
 
     def write_cluster_csv(self, outfilepath, include_header_row=True,
@@ -288,10 +288,6 @@ class TextReuseCluster(object):
                                     'preceding_header_index',
                                     'start_index',
                                     'end_index',
-                                    'find_start_index',
-                                    'find_end_index',
-                                    'octavo_start_index',
-                                    'octavo_end_index',
                                     'document_length',
                                     'document_collection',
                                     'group_name',
@@ -299,7 +295,7 @@ class TextReuseCluster(object):
                                     'group_start_index',
                                     'group_end_index'])
             for fragment in self.fragment_list:
-                csvwriter.writerow([fragment.cluster_id,
+                csvwriter.writerow([fragment.fragment_id,
                                     fragment.ecco_id,
                                     fragment.estc_id,
                                     fragment.author,
@@ -315,10 +311,6 @@ class TextReuseCluster(object):
                                     fragment.preceding_header_index,
                                     fragment.start_index,
                                     fragment.end_index,
-                                    fragment.find_start_index,
-                                    fragment.find_end_index,
-                                    fragment.octavo_start_index,
-                                    fragment.octavo_end_index,
                                     fragment.document_length,
                                     fragment.document_collection,
                                     self.group_name,

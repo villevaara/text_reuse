@@ -1,0 +1,18 @@
+document_ids:
+  - id: "0113100700"
+    estcid: "T004011"
+    filter_out_year_below: -1 
+    filter_out_year_above: 1756
+    sequence: 1
+    description: "Four dissertations."
+filter_out_authors:
+  - "Hume, David (1711-1776)"
+author_ignore_id: ""
+require_first_author: "not-orig"
+filter_out_year_below: -1
+filter_out_year_above: 1738
+only_keep_first_author: True
+filter_out_estcids:
+  -
+only_keep_authors:
+

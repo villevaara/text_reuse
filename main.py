@@ -54,12 +54,19 @@ from lib.author_metadata import read_author_metadata_csv
 import lib.log_writer as log_writer
 
 
-def get_cluster_list(fragment_list, add_cluster_groups=True):
+def get_cluster_list(document_id, fragment_list, add_cluster_groups=True):
     print("> Getting cluster list ...")
     cluster_ids = fragment_list.get_unique_cluster_ids()
     cluster_list = []
     for cluster_id in cluster_ids:
         fragments = fragment_list.get_fragments_of_cluster_id(cluster_id)
+        if len(fragments) == 0:
+            continue
+        doc_ids_in_cluster = set()
+        for fragment in fragments:
+            doc_ids_in_cluster.add(fragment.ecco_id)
+        if document_id not in doc_ids_in_cluster:
+            continue
         cluster = TextReuseCluster(document_id, cluster_id, fragments)
         if add_cluster_groups:
             cluster.add_cluster_groups()
@@ -432,7 +439,7 @@ for document_id_dict in document_ids:
     # get doc from api
     ecco_api_client = OctavoEccoClient()
     cluster_api_client = OctavoEccoClusterClient(limit=api_limit,
-                                                 timeout=600)
+                                                 timeout=60)
     document_data = ecco_api_client.get_text_for_document_id(document_id)
     document_text = document_data.get('text')
 
@@ -456,36 +463,39 @@ for document_id_dict in document_ids:
     #     document_id)
 
     # remove after update!
-    docid_indexmap_ascii = get_doctext_indexmap(
-            orig_text=document_text, method_ascii=True)
-    docid_indexmap_unicode = get_doctext_indexmap(
-        orig_text=document_text, method_ascii=False)
-    doctext_splitjoined_unicode = (
-        get_document_text_splitjoined(
-            document_data.get('text'),
-            ascii_search=False))
-    doctext_splitjoined_ascii = (
-        get_document_text_splitjoined(
-            document_data.get('text'),
-            ascii_search=True))
-    document_data['splitjoined_unicode'] = (doctext_splitjoined_unicode)
-    document_data['splitjoined_ascii'] = (doctext_splitjoined_ascii)
+    # docid_indexmap_ascii = get_doctext_indexmap(
+    #         orig_text=document_text, method_ascii=True)
+    # docid_indexmap_unicode = get_doctext_indexmap(
+    #     orig_text=document_text, method_ascii=False)
+    # doctext_splitjoined_unicode = (
+    #     get_document_text_splitjoined(
+    #         document_data.get('text'),
+    #         ascii_search=False))
+    # doctext_splitjoined_ascii = (
+    #     get_document_text_splitjoined(
+    #         document_data.get('text'),
+    #         ascii_search=True))
+    # document_data['splitjoined_unicode'] = (doctext_splitjoined_unicode)
+    # document_data['splitjoined_ascii'] = (doctext_splitjoined_ascii)
 
-    fragment_list = FragmentList(cluster_data, seed_docid=document_id)
+    fragment_list = FragmentList(cluster_data, seed_document_id=document_id)
     fragment_list.add_metadata(author_metadata, good_metadata=good_metadata)
+    fragment_list.set_octavo_indices()
+    fragment_list.remove_fragments_missing_correct_indices()
     fragment_list.add_headerdata(headerdata, document_id)
 
-    # remove after update!
-    # hume 5/8 is supposedly ascii. remove this after octavo indices set.
-    for fragment in fragment_list.fragment_list:
-        if fragment.ecco_id == document_id:
-            is_ascii = fragment.set_fragment_encoding(document_data)
-            if is_ascii:
-                fragment.set_octavo_indices(docid_indexmap_ascii, False)
-            else:
-                fragment.set_octavo_indices(docid_indexmap_unicode, False)
+    # set fragment indices
+    # for fragment in fragment_list.fragment_list:
+    #     if fragment.ecco_id == document_id:
+    #         fragment.set_simple_find_index(document_data['text'])
+    #        # is_ascii = fragment.set_fragment_encoding(document_data)
+    #        # if is_ascii:
+    #        #     fragment.set_octavo_indices(docid_indexmap_ascii, False)
+    #        # else:
+    #        #     fragment.set_octavo_indices(docid_indexmap_unicode, False)
 
-    cluster_list = get_cluster_list(fragment_list, add_cluster_groups=True)
+    cluster_list = get_cluster_list(
+        document_id, fragment_list, add_cluster_groups=True)
     cluster_list = cluster_list_remove_duplicates(
         cluster_list,
         filter_author_ref=only_keep_first_author)

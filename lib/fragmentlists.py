@@ -3,29 +3,39 @@ import sys
 
 from lib.tr_fragment import TextReuseFragment
 from lib.text_reuse_common import load_good_metadata
+from lib.octavo_api_client import (
+    OctavoEccoClient,
+    OctavoEeboClient
+    # OctavoEccoClusterClient
+    )
 
 
 def test_fragment_text(fragment, document_text):
     fragment_text = fragment.text
-    fragment_text = fragment_text.strip()
+    fragment_text = fragment_text.strip().lower()
     octavo_text = document_text[fragment.octavo_start_index:
-                                fragment.octavo_end_index]
+                                fragment.octavo_end_index].lower()
     if fragment.is_ascii:
         octavo_text = re.sub(r'[^\x00-\x7f]', r'', octavo_text)
     octavo_text = ' '.join(octavo_text.split())
     if fragment_text == octavo_text:
         return True
     else:
-        # print(fragment_text)
-        # print("\n")
-        # print(octavo_text)
+        print("  !!  Validation error. fragtext, octavotext:")
+        print(fragment_text)
+        print("\n")
+        print(octavo_text)
         return False
 
 
-def get_document_text_splitjoined(document_text, ascii_search):
+def get_document_text_splitjoined(
+        document_text, ascii_search, splitjoin=False):
     if ascii_search:
         document_text = re.sub(r'[^\x00-\x7f]', r'', document_text)
-    document_text_stripped = ' '.join(document_text.split())
+    if splitjoin:
+        document_text_stripped = ' '.join(document_text.split())
+    else:
+        document_text_stripped = document_text
     return document_text_stripped
 
 
@@ -47,24 +57,24 @@ def get_fragmentlist(cluster_data, document_text_data,
             print("Processing item: " + str(i) +
                   " / " + str(cluster_data_length))
             print("documentID: " + item.get('documentID'))
-            print("fragmentID:  " + str(item.get('fragmentID')))
+            print("fragmentID: " + str(item.get('fragmentID')))
         i = i + 1
         fragment = TextReuseFragment(ecco_id=item.get('documentID'),
-                                     cluster_id=item.get('fragmentID'),
+                                     fragment_id=item.get('fragmentID'),
                                      text=item.get('text'),
                                      start_index=item.get('startIndex'),
                                      end_index=item.get('endIndex'))
 
         if docid_is_ascii is None:
-            use_orig = False
+            use_orig_encoding_info = False
         else:
-            use_orig = True
+            use_orig_encoding_info = True
 
         text_validates = False
 
         # set octavo indices
         while not text_validates:
-            if use_orig:
+            if use_orig_encoding_info:
                 fragment.is_ascii = docid_is_ascii
             else:
                 # only do splitjoin once.
@@ -90,34 +100,56 @@ def get_fragmentlist(cluster_data, document_text_data,
 
             if fragment.is_ascii is None:
                 print("     >> Octavo indices not found for fragment" +
-                      " clu: " + fragment.cluster_id +
+                      " clu: " + str(fragment.fragment_id) +
                       " doc: " + fragment.ecco_id +
                       "\n      >> moving on with life.")
                 fragment.octavo_start_index = -1
                 fragment.octavo_end_index = -1
+                fragment.octavo_indices_validate = False
                 sys.exit("ERROR!")
                 break
             if fragment.is_ascii:
                 # print("indexes: ascii")
-                # print("use_orig: " + str(use_orig))
+                # print("orig_encoding_info: " + str(use_orig_encoding_info))
                 fragment.set_octavo_indices(docid_indexmap_ascii,
-                                            orig_index=use_orig)
+                                            orig_index=use_orig_encoding_info)
             else:
                 # print("indexes: unicode")
-                # print("use_orig: " + str(use_orig))
+                # print("orig_encoding_info: " + str(use_orig_encoding_info))
                 fragment.set_octavo_indices(docid_indexmap_unicode,
-                                            orig_index=use_orig)
+                                            orig_index=use_orig_encoding_info)
 
             if test_fragment_text(fragment, document_text_data.get('text')):
                 text_validates = True
+                print("  >> Fragment validates")
+                fragment.octavo_indices_validate = True
             else:
                 # print(" !!ERRORERROR!! fragment text does not match!")
-                use_orig = False
+                print("  >> Fragment does not validate, testing other encoding")
+                use_orig_encoding_info = False
 
         fragment_list.append(fragment)
 
     print("  >> Done!")
     return fragment_list
+
+
+def get_validated_fragmentlist(fragmentlist, doc_plaintext, docid):
+    validated_fraglist = []
+    # docid_fulltext_data = ecco_api_client.get_text_for_document_id(docid)
+    print("validating fragdata")
+    for fragment in fragmentlist:
+        # api_text_slice = docid_fulltext_data.get('text')[
+        #     fragment.octavo_start_index:fragment.octavo_end_index]
+        frag_validation = (
+            test_fragment_text(fragment, doc_plaintext))
+        if frag_validation:
+            validated_fraglist.append(fragment)
+        else:
+            print("a fragment did not validate. ?!")
+            print("fragment_id: " + str(fragment.fragment_id))
+            print("ecco_id:     " + str(fragment.ecco_id))
+    return validated_fraglist
 
 
 def get_doctext_indexmap(orig_text, method_ascii):
@@ -173,14 +205,15 @@ def get_doctext_indexmap(orig_text, method_ascii):
 
 class FragmentList(object):
 
-    def __init__(self, cluster_data, seed_docid):
-
-        self.seed_docid = seed_docid  # not used ...
-        self.seed_fragment = None
+    def __init__(self, cluster_data, seed_document_id=None):
+        self.seed_document_id = seed_document_id  # not used ...
+        # self.seed_fragment = None
         self.fragment_list = (
             self.get_initial_fragment_list(cluster_data))
         self.cluster_id_index = dict()
         self.document_id_index = dict()
+        self.fragments_by_ecco_id = dict()
+        self.set_doc_id_dict()
 
     def get_initial_fragment_list(self, cluster_data):
         print("  > Initializing fragment list ...")
@@ -189,19 +222,54 @@ class FragmentList(object):
         print("items in list: " + str(cluster_data_length))
         for item in cluster_data:
             fragment = TextReuseFragment(ecco_id=item.get('documentID'),
-                                         cluster_id=item.get('fragmentID'),
+                                         fragment_id=item.get('fragmentID'),
                                          text=item.get('text'),
                                          start_index=item.get('startIndex'),
                                          end_index=item.get('endIndex'))
             fragment_list.append(fragment)
-            if fragment.ecco_id == self.seed_docid:
-                self.seed_fragment = fragment
+            # AUG refractor-delete
+            # if fragment.ecco_id == self.seed_docid:
+            #     self.seed_fragment = fragment
         return fragment_list
+
+    def set_doc_id_dict(self):
+        for fragment in self.fragment_list:
+            if fragment.ecco_id in self.fragments_by_ecco_id.keys():
+                self.fragments_by_ecco_id[
+                    fragment.ecco_id].append(fragment)
+            else:
+                self.fragments_by_ecco_id[fragment.ecco_id] = [
+                    fragment]
+
+    def remove_fragments_missing_correct_indices(self):
+        correct_fragments = list()
+        for fragment in self.fragment_list:
+            if fragment.octavo_indices_validate:
+                correct_fragments.append(fragment)
+        self.fragment_list = correct_fragments
+        self.fragments_by_ecco_id = dict()
+        self.set_doc_id_dict()
+
+    def set_octavo_indices(self):
+        ecco_api_client = OctavoEccoClient()
+        eebo_api_client = OctavoEeboClient()
+        for document_id, fragment_list in self.fragments_by_ecco_id.items():
+            # TODO: handle the notes somehow!
+            if "_note_" in str(document_id):
+                textdata = None
+            elif len(document_id) < 10:
+                textdata = eebo_api_client.get_text_for_document_id(
+                    document_id).get('text')
+            else:
+                textdata = ecco_api_client.get_text_for_document_id(
+                    document_id).get('text')
+            for fragment in fragment_list:
+                fragment.set_octavo_index(textdata)
 
     def set_cluster_id_index(self):
         i = 0
         for fragment in self.fragment_list:
-            cluid = fragment.cluster_id
+            cluid = fragment.fragment_id
             fragment_index = i
             if cluid in self.cluster_id_index.keys():
                 self.cluster_id_index[cluid].append(fragment_index)

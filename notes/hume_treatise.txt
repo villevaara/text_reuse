@@ -1,0 +1,155 @@
+------------------------------------------
+TREATISE
+
+collectionID: ecco1
+documentID: 0208300801
+fullTitle: A treatise of human nature: being an attempt to introduce the experimental method of reasoning into moral subjects. ... . of the understanding.
+module: Religion and Philosophy
+documentLength: 592383
+dateStart: 17390101
+ESTCID: T004002
+system_control_number: (CU-RivES)T4002
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 488
+
+collectionID: ecco1
+documentID: 0208300802
+fullTitle: A treatise of human nature: being an attempt to introduce the experimental method of reasoning into moral subjects. ... . of the understanding.
+module: Religion and Philosophy
+documentLength: 395520
+dateStart: 17390101
+ESTCID: T004002
+system_control_number: (CU-RivES)T4002
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 331
+
+collectionID: ecco1
+documentID: 0208400103
+fullTitle: A treatise of human nature: being an attempt to introduce the experimental method of reasoning into moral subjects. ... . of the understanding.
+module: Religion and Philosophy
+documentLength: 396060
+dateStart: 17390101
+ESTCID: T004002
+system_control_number: (CU-RivES)T4002
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 317
+
+------------------------------------------
+ESSAYS
+
+collectionID: ecco1
+documentID: 0375001000
+fullTitle: Essays, moral and political.
+module: Religion and Philosophy
+documentLength: 190125
+dateStart: 17410101
+ESTCID: T004004
+system_control_number: (CU-RivES)T4004
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 187
+
+collectionID: ecco1
+documentID: 0379203102
+fullTitle: Essays, moral and political. Volume II.
+module: Religion and Philosophy
+documentLength: 218835
+dateStart: 17420101
+ESTCID: T142762
+system_control_number: (CU-RivES)T142762
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 211
+
+---------------------
+EHU
+
+collectionID: ecco1
+documentID: 0441100400
+fullTitle: Philosophical essays concerning human understanding. By the author of the Essays moral and political.
+module: Religion and Philosophy
+documentLength: 320490
+dateStart: 17480101
+ESTCID: T004022
+system_control_number: (CU-RivES)T4022
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 249
+
+-------------------------
+3 ESSAYS
+
+collectionID: ecco1
+documentID: 0441200400
+fullTitle: Three essays, moral and political. Never before published. Which compleats the former edition, in two volumes, octavo. By David Hume, Esq;
+module: Religion and Philosophy
+documentLength: 70098
+dateStart: 17480101
+ESTCID: T142264
+system_control_number: (CU-RivES)T142264
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 62
+
+---------------------------
+Archibald Stewart
+
+collectionID: ecco2
+documentID: 1436500700
+fullTitle: A true account of the behaviour and conduct of Archibald Stewart, Esq; late Lord Provost of Edinburgh, in a letter to a friend
+module: 
+documentLength: 49494
+dateStart: 17480000
+ESTCID: T051777
+system_control_number: (CU-RivES)T51777
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 50
+
+----------------------------
+EMP
+
+collectionID: ecco1
+documentID: 0352600600
+fullTitle: An enquiry concerning the principles of morals. By David Hume, Esq;
+module: Religion and Philosophy
+documentLength: 315469
+dateStart: 17510101
+ESTCID: T004010
+system_control_number: (CU-RivES)T4010
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 256
+
+-------------------------------
+pol disc
+
+collectionID: ecco1
+documentID: 0691100800
+fullTitle: Political discourses. By David Hume Esq.
+module: Social Sciences
+documentLength: 417960
+dateStart: 17520101
+ESTCID: T083618
+system_control_number: (CU-RivES)T83618
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 306
+
+-----------------------------
+4 diss
+
+collectionID: ecco1
+documentID: 0113100700
+fullTitle: Four dissertations. I. The natural history of religion. II. Of the passions. III. Of tragedy. IV. Of the standard of taste. By David Hume, Esq.
+module: General Reference
+documentLength: 264645
+dateStart: 17570101
+ESTCID: T004011
+system_control_number: (CU-RivES)T4011
+author: Hume, David (1711-1776)
+score: 1
+totalPages: 248

@@ -1,0 +1,1 @@
+scp -F ../../../comhis-ansible/ssh.conf cloud-user@vm0824.kaj.pouta.csc.fi:/eccotxtpool/eccotxt/ECCO_I/ECCO_1of2/HistAndGeo/0162200200/xml/0162200200_page1.txt .

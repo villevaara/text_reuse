@@ -1,0 +1,78 @@
+Cluster tool parts
+
+Verkoston hahmottaja
+---------------------
+-mitkä teokset linkittyvät keskenään eniten
+-mitkä teosjoukot lainailevat keskenään
+
+-sama mutta tekijöille
+-julkaisuvuosille?
+
+-mitä klustereista itsestään voi tässä sanoa?
+
+
+Kontekstityökalu
+-----------------
+-mitä saman klusterin lähialueella on eri teoksissa?
+-laske lähialueiden samankaltaisuutta?
+-sentimenttianalyysiä?
+-topiikkimallinnusta
+-kollokaatioita
+
+
+Yleistilastoja
+---------------
+-kuinka suuri osa teoksesta x on kierrätettyä?
+-missä kohden kierrätetyt ptäkä teoksessa ovat?
+ *missä kohden kierrätetyt pätkät teoksissa ylipäätään ovat
+
+-teokset joita kierrätetään paljon, 1,5,10,50 vuoden sisällä
+
+
+
+Yhden teoksen klusterit
+------------------------
+-mitkä teokset lainaavat
+-ketkä kirjoittajat lainaavat
+-mitä teoksia lainaa
+-keitä kirjoittajia lainaa
+-paljonko teoksesta on kierrätettyä
+-minkälaiseen verkostoon asettuu
+-kuinka paljon teosta lainattiin 1,3,5,10,20 v sisällä
+-mitkä osat alkuperäisiä vs kierrätettyjä
+
+
+Tehtävissä kun uudet indeksit:
+------------------------------
+-kontekstin onginta
+cat /eccotxtpool/eccotxt/*/*/*/1146800700/xml/*_*_*.txt | head -c 91361 | tail -c 87098
+
+
+Nyt:
+----
+-kuinka moni kohta teoksesta kierrätetty ylipäätään.
+  *kierrätys % 
+  *kierrätyspaikat
+  <- merkkiindeksillä. Teoksen pituus eccoapista, arvio johon +x merkkiä (rivien loppuvälit)
+-kierrätysten määrä 1,3,5,10,20 v sisällä
+  *teoksittain
+  *klustereittain teoksen sisällä
+  *
+-etsi klusterit joiden alkupiste teoksessa
+
+
+- kuinka moni kohta teoksesta kierrätetty?
+  * teoksen kokopituus [x]
+  * kierrätyspaikat [x]
+  * vain klusterit joissa myös muiden tekijöiden teoksia [ ]
+  * vain klusterit joissa teos ekana [ ]
+
+- seuraavaksi:
+  * käyttö x vuoden sisällä (klustereille joissa teos eka)
+  !! nyt vasta toistot jotka myöhempiä.
+  -> 1) hae eka teos klusterille, katso onko sama kuin haettu
+     2) jos on, niin lisää klusteri hyväksyttyihin
+    * mitkä kohdat, ja kuka
+    * mitkä kohdat pitkäikäisimpiä
+  * teoksille kuumuusindeksi:
+    * vuosikkunakierrätykset, poislukien tekijän omat

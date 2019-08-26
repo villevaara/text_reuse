@@ -1,0 +1,41 @@
+Results:
+
+coverage_data:
+  * number of reuse hits / character in original text
+  -> gives parts not reused by others
+  -> gives parts not found in other works before Hume
+
+
+header_reuse:
+  * total reuse cases / header
+  * 
+
+- who did reuse?
+- when did the reuse happen?
+- works that reused hume the most
+- spots on hume reused by author X
+- spots on hume reused by work X
+- authors who reused hume the most
+
+
+* suorien lainausten erottaminen:
+  laidassa kulkevat "-merkit
+* myös lainaukset joita ei ole tunnistettu, eli "-merkit
+  jotka eivät esiinny klustereissa
+
+
+-------------------------
+NEW:
+-------------------------
+
+Hume vs Rapin:
+1.
+  * number of fragments per year present in Hume's History and originating from Hume, per year, discounting Hume himself
+  * number of fragments per year present in Rapin's History and originating from Rapin, per year, discounting Rapin himself
+2.
+  * number of fragments per year present in Hume's History 
+  * number of fragments per year present in Rapin's History
+3.
+  * number of fragments per year present in Hume's History, not present in Rapin's History
+  * number of fragments per year present in Rapin's History, not present in Hume's History
+  * number of fragments per year present both in Hume's History and Rapin's History

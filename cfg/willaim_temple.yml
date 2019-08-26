@@ -1,0 +1,41 @@
+document_ids:
+  - id: "0320800100"
+    filter_out_year_below: 1669
+    filter_out_year_above: -1
+    sequence: 1
+    description: "Observations upon the United Provinces of the Netherlands"
+  - id: "0926501000"
+    filter_out_year_below: 1680
+    filter_out_year_above: -1
+    sequence: 2
+    description: "Miscellanea. The first part."
+  - id: "0404900500"
+    filter_out_year_below: 1680
+    filter_out_year_above: -1
+    sequence: 3
+    description: "Miscellanea. The second part."
+  - id: "0090801900"
+    filter_out_year_below: 1680
+    filter_out_year_above: -1
+    sequence: 4
+    description: "Miscellanea. The third part."
+  - id: "0003300200"
+    filter_out_year_below: 1692
+    filter_out_year_above: -1
+    sequence: 5
+    description: "Memoirs of what pass'd in Christendom"
+  - id: "0175300500"
+    filter_out_year_below: 1696
+    filter_out_year_above: -1
+    sequence: 6
+    description: "An introduction to the history of England."
+filter_out_authors:
+  - "Temple, William (1628-1699)"
+author_ignore_id: ""
+only_keep_first_author: False
+require_first_author:
+filter_out_year_below: -1
+filter_out_year_above: -1
+filter_out_estcids:
+  -
+only_keep_authors:

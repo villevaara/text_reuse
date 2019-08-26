@@ -1,0 +1,207 @@
+* output:
+  - 2 levels of headers, for each fragment
+  
+
+T082472
+
+volume ids:
+https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search?query=%3CDOCUMENT%C2%A7ESTCID:T082472%C2%A7DOCUMENT%3E&field=documentID&pretty
+
+single vol content:
+https://vm0824.kaj.pouta.csc.fi/octavo/ecco/search?query=%3CDOCUMENT%C2%A7documentID:0145100106%C2%A7DOCUMENT%3E&field=fullTitle&field=content&field=collectionID&limit=-1&timeout=300&pretty
+
+---
+Hume:
+
+1/8:
+"documentID" : "0145000201"
+1st pub: 1762
+total clusters: 15297
+
+2/8:
+"documentID" : "0145000202"
+1st pub: 1762
+15564
+
+3/8:
+"documentID" : "0145100103"
+1st pub: 1762
+15006
+
+4/8:
+"documentID" : "0145100104"
+1st pub: 1759
+16823
+
+5/8:
+"documentID" : "0145100105"
+1st pub: 1759
+16652
+
+6/8:
+"documentID" : "0145100106"
+1st pub: 1754
+19964
+
+7/8:
+"documentID" : "0145100107"
+1st pub: 1757
+16785
+
+8/8:
+"documentID" : "0145200108"
+1st pub: 1757
+13555
+
+---
+# Rapin:
+15 vols: T144219
+ESTCyear: 1731
+
+      vol 1
+      "documentID" : "1393700101",
+      "ESTCID" : "T144219",
+      "totalPages" : 449
+
+      vol 2
+      "documentID" : "1393700102",
+      "ESTCID" : "T144219",
+      "totalPages" : 471
+
+      vol 3
+      "documentID" : "1393700103",
+      "ESTCID" : "T144219",
+      "totalPages" : 548
+
+      vol 4
+      "documentID" : "1393800104",
+      "ESTCID" : "T144219",
+      "totalPages" : 519
+
+      vol 5
+      "documentID" : "1393800105",
+      "ESTCID" : "T144219",
+      "totalPages" : 504
+
+      vol 6
+      "documentID" : "1393800106",
+      "ESTCID" : "T144219",
+      "totalPages" : 520
+
+      vol 7
+      "documentID" : "1393900107",
+      "ESTCID" : "T144219",
+      "totalPages" : 711
+
+      vol 8 
+      "documentID" : "1393900108",
+      "ESTCID" : "T144219",
+      "totalPages" : 551
+
+      vol 9
+      "documentID" : "1393900109",
+      "ESTCID" : "T144219",
+      "totalPages" : 623
+
+      vol 10
+      "documentID" : "1394000110",
+      "ESTCID" : "T144219",
+      "totalPages" : 560
+
+      vol 11
+      "documentID" : "1394000111",
+      "ESTCID" : "T144219",
+      "totalPages" : 551
+
+      vol 12
+      "documentID" : "1394000112",
+      "ESTCID" : "T144219",
+      "totalPages" : 583
+
+      vol 13
+      "documentID" : "1394100113",
+      "ESTCID" : "T144219",
+      "totalPages" : 504
+
+      vol 14
+      "documentID" : "1394100114",
+      "ESTCID" : "T144219",
+      "totalPages" : 470
+
+      vol 15
+      "documentID" : "1394100115",
+      "ESTCID" : "T144219",
+      "totalPages" : 723
+
+
+
+
+
+
+
+I, 1725: T160963
+      "documentID" : "0144800101",
+      "fullTitle" : "The history of England. Written in French by Mr. De Rapin Thoyras. Done into English, with additional notes mark'd with an *, by N. Tindal, M. A. Vicar of Great Waltham in Essex. Vol. I. From the Invasion of the Romans, To the End of the Reign of William the Conqueror.",
+      "ESTCID" : "T160963",
+II, 1726: T160966
+
+III, 1727: T160968
+IV, 1727: T160970
+V, 1728: T160972
+VI, 1728: T160974
+VII, 1729: T160976
+VIII, 1729: T160977
+IX, 1729: T160978
+X, 1730: T160979
+XI, 1730: T160980
+XII, 1730: T160981
+XIII, 1730: T160983
+XIV, 1731: T160984
+XV, 1731: T160985
+
+---
+
+Guthrie:
+estc T138171
+
+vol1
+1679000101
+1744
+1. Julius Caesar - Edward III
+
+vol2
+missing
+
+vol3
+1679100103
+1751
+3. Edward VI - Elizabeth
+
+vol4
+1679100104
+1751
+4. History of English Church (Henry VI - Elizabeth), James - Charles I - republic of England
+
+---
+
+Thomas Carte, General History of England, 1747-55
+estc T101742
+
+vol1
+0018400101
+1747
+Caesar - John
+
+vol2
+0018400102
+1750
+Henry III - Henry VII
+
+vol3
+1752
+0018500103
+
+
+vol4
+1755
+0018500104

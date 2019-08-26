@@ -1,0 +1,46 @@
+document_ids:
+  - id: "0230400101"
+    estcid: "N071655"
+    filter_out_year_below: 1777
+    filter_out_year_above: -1
+    sequence: 1
+    description: "Vol 1."
+    # 1 ed publ 1777
+  - id: "0230400102"
+    estcid: "N071655"
+    filter_out_year_below: 1780
+    filter_out_year_above: -1
+    sequence: 2
+    description: "Vol 2."
+    # pub 1780
+  - id: "0230400103"
+    estcid: "N071655"
+    filter_out_year_below: 1790
+    filter_out_year_above: -1
+    sequence: 3
+    description: "Vol 3."
+    # pub 1790
+  - id: "0230400104"
+    estcid: "N071655"
+    # T143082
+    filter_out_year_below: 1794
+    filter_out_year_above: -1
+    sequence: 4
+    description: "Vol 4."
+    # pub 1794
+  - id: "0230400105"
+    estcid: "N071655"
+    filter_out_year_below: 1801
+    filter_out_year_above: -1
+    sequence: 5
+    description: "Vol 5."
+    # pub 1801
+filter_out_authors:
+  - "Blair, Hugh (1718-1800)"
+author_ignore_id: ""
+require_first_author: "orig"
+filter_out_year_below: -1
+filter_out_year_above: -1
+only_keep_first_author: False
+filter_out_estcids:
+only_keep_authors:

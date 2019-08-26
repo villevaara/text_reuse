@@ -1,0 +1,1 @@
+rsync -a --info=progress2 -e 'ssh -F /home/vvaara/projects/comhis/comhis-ansible/ssh.conf' processing-1:/eccotxtpool/eccotxt eccotxt
