@@ -6,7 +6,7 @@
 
 ## Usage
 
-```python
+```
 python main.py --cfg hume_all_from_others_new.yml
 ```
 
@@ -16,6 +16,6 @@ indexdata_dump.py
 
 ### usage
 
-```python
+```
 python indexdata_dump.py --inputfile ecco1_ids1.csv
 ```
